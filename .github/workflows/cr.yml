@@ -1,0 +1,105 @@
+name: CR
+
+on:
+  push:
+    branches: [main]
+    paths: [Dockerfile]
+  pull_request:
+    branches: [main]
+    paths: [Dockerfile]
+  schedule:
+    # Once a week
+    - cron: "0 0 * * */7"
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    services:
+      registry:
+        image: registry:latest
+        ports:
+          - 5000:5000
+
+    strategy:
+      matrix:
+        runtime:
+          - name: freedesktop
+            tag: 22.08
+            packages: org.freedesktop.Platform//22.08 org.freedesktop.Sdk//22.08
+            remote: flathub
+
+          - name: gnome
+            tag: 43
+            packages: org.gnome.Platform//43 org.gnome.Sdk//43
+            remote: flathub
+
+          - name: kde
+            tag: 5.15-22.08
+            packages: org.kde.Platform//5.15-22.08 org.kde.Sdk//5.15-22.08
+            remote: flathub
+
+          - name: elementary
+            tag: juno-20.08
+            packages: io.elementary.BaseApp//juno-20.08 org.gnome.Platform//3.38 org.gnome.Sdk//3.38
+            remote: flathub
+      fail-fast: false
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Login
+        if: ${{ github.event_name != 'pull_request' }}
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v2
+        with:
+          driver-opts: network=host
+
+      - name: Setup Cache
+        uses: actions/cache@v3
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      - name: Build Base Image
+        uses: docker/build-push-action@v3
+        with:
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
+          file: Dockerfile
+          pull: true
+          push: true
+          tags: localhost:5000/flatter-base:latest
+
+      - name: Generate Dockerfile
+        run: |
+          cat >> ${{ matrix.runtime.name }}.Dockerfile << EOF
+          # syntax = docker/dockerfile:experimental
+          FROM localhost:5000/flatter-base:latest
+
+          RUN --security=insecure flatpak install -y --noninteractive \
+                                                  ${{ matrix.runtime.remote }} \
+                                                  ${{ matrix.runtime.packages }}
+          EOF
+
+      - name: Build
+        uses: docker/build-push-action@v3
+        with:
+          allow: security.insecure
+          context: .
+          file: ${{ matrix.runtime.name }}.Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ghcr.io/andyholmes/flatter/${{ matrix.runtime.name }}:${{ matrix.runtime.tag }}

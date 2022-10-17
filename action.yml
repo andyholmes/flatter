@@ -1,0 +1,52 @@
+name: "Flattest"
+description: "Build, test and distribute Flatpak applications"
+author: "Andy Holmes"
+branding:
+  icon: "package"
+  color: "blue"
+inputs:
+  manifests:
+    description: >
+      "A list of Flatpak manifests to build."
+    required: true
+  pages-artifact:
+    description: >
+      Upload the repository as a GitHub Pages Artifact
+    default: false
+    required: false
+  bundle-artifact:
+    description: >
+      "Upload Flatpak bundles as artifacts"
+    default: false
+    required: false
+
+  # Command-line Options
+  arch:
+    description: >
+      The CPU architecture to build for.
+    default: "x86_64"
+    required: false
+  default-branch:
+    description: >
+      The Flatpak default branch.
+    required: false
+  gpg-sign:
+    description: >
+      The fingerprint of the GPG key sign te repository with.
+    required: false
+  gpg-homedir:
+    description: >
+      The directory to search for GPG keys.
+    required: false
+  install-deps-from:
+    description: >
+      The remote to install build dependencies from.
+    required: false
+  repo:
+    description: >
+      The folder used to store Flatpak repository files.
+    default: "repo"
+    required: false
+runs:
+  using: "node16"
+  main: "dist/index.js"
