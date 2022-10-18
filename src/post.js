@@ -7,27 +7,27 @@ import * as core from '@actions/core';
 
 async function run() {
     try {
-        // Inputs are re-evaluted before the post action, so we want the
-        // original key used for restore
-        const primaryKey = core.getState('cache-primary-key');
-        if (!primaryKey) {
-            core.info('[warning] Error retrieving key from state');
+        // Cache key from state; inputs are re-evaluated before the post action
+        const cacheKey = core.getState('cache-key');
+        if (!cacheKey) {
+            core.debug(`Cache disabled`);
             return;
         }
 
-        const state = core.getState('cache-state');
-        if (primaryKey === state) {
-            core.info(`[skipping] Cache hit on the primary key ${primaryKey}`);
+        // There was a hit on the cache key
+        const cacheHit = core.getState('cache-hit');
+        if (cacheHit) {
+            core.debug(`Cache hit with ${cacheKey}`);
             return;
         }
 
         const cachePaths = [core.getInput('repo')];
-        const cacheId = await cache.saveCache(cachePaths, primaryKey);
+        const cacheId = await cache.saveCache(cachePaths, cacheKey);
 
         if (cacheId != -1)
-            core.info(`Cache saved with key: ${primaryKey}`);
+            core.info(`Cache saved with ${cacheKey}`);
     } catch (error) {
-        core.info(`[warning] ${error.message}`);
+        core.warning(`Failed to save cache: ${error.message}`);
     }
 }
 

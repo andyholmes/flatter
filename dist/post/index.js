@@ -61773,27 +61773,27 @@ var __webpack_exports__ = {};
 
 async function run() {
     try {
-        // Inputs are re-evaluted before the post action, so we want the
-        // original key used for restore
-        const primaryKey = _actions_core__WEBPACK_IMPORTED_MODULE_1__.getState('cache-primary-key');
-        if (!primaryKey) {
-            _actions_core__WEBPACK_IMPORTED_MODULE_1__.info('[warning] Error retrieving key from state');
+        // Cache key from state; inputs are re-evaluated before the post action
+        const cacheKey = _actions_core__WEBPACK_IMPORTED_MODULE_1__.getState('cache-key');
+        if (!cacheKey) {
+            _actions_core__WEBPACK_IMPORTED_MODULE_1__.debug(`Cache disabled`);
             return;
         }
 
-        const state = _actions_core__WEBPACK_IMPORTED_MODULE_1__.getState('cache-state');
-        if (primaryKey === state) {
-            _actions_core__WEBPACK_IMPORTED_MODULE_1__.info(`[skipping] Cache hit on the primary key ${primaryKey}`);
+        // There was a hit on the cache key
+        const cacheHit = _actions_core__WEBPACK_IMPORTED_MODULE_1__.getState('cache-hit');
+        if (cacheHit) {
+            _actions_core__WEBPACK_IMPORTED_MODULE_1__.debug(`Cache hit with ${cacheKey}`);
             return;
         }
 
         const cachePaths = [_actions_core__WEBPACK_IMPORTED_MODULE_1__.getInput('repo')];
-        const cacheId = await _actions_cache__WEBPACK_IMPORTED_MODULE_0__.saveCache(cachePaths, primaryKey);
+        const cacheId = await _actions_cache__WEBPACK_IMPORTED_MODULE_0__.saveCache(cachePaths, cacheKey);
 
         if (cacheId != -1)
-            _actions_core__WEBPACK_IMPORTED_MODULE_1__.info(`Cache saved with key: ${primaryKey}`);
+            _actions_core__WEBPACK_IMPORTED_MODULE_1__.info(`Cache saved with ${cacheKey}`);
     } catch (error) {
-        _actions_core__WEBPACK_IMPORTED_MODULE_1__.info(`[warning] ${error.message}`);
+        _actions_core__WEBPACK_IMPORTED_MODULE_1__.warning(`Failed to save cache: ${error.message}`);
     }
 }
 

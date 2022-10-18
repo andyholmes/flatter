@@ -75,13 +75,23 @@ async function buildBundle(location, fileName, name, branch = 'master', args = [
  * @param {PathLike} location - A path to a repository
  * @param {string} gpgKey - The GPG key to sign with
  */
-async function signRepository(location, gpgKey) {
-    if (!gpgKey)
-        return;
+async function signRepository(location, args = []) {
+    const signArgs = new Set(args);
 
-    await exec.exec('flatpak', ['build-sign', location,
-        `--gpg-sign=${gpgKey}`]);
-    await exec.exec('flatpak', ['build-update-repo', location,
-        `--gpg-sign=${gpgKey}`]);
+    for (const option of ['gpg-sign', 'gpg-homedir']) {
+        if (core.getInput(option))
+            signArgs.add(`--${option}=${core.getInput(option)}`);
+    }
+
+    await exec.exec('flatpak', [
+        'build-sign',
+        ...signArgs,
+        location,
+    ]);
+    await exec.exec('flatpak', [
+        'build-update-repo',
+        ...signArgs,
+        location,
+    ]);
 }
 

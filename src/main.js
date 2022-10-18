@@ -10,8 +10,6 @@ import * as flatpak from './flatpak.js';
 import * as flatpakBuilder from './flatpakBuilder.js';
 import * as utils from './utils.js';
 
-const CACHE_FLATPAK_BUILDER_DIRS = ['.flatpak-builder'];
-
 
 /**
  * Upload a Flatpak repository as a GitHub Pages Artifact.
@@ -71,43 +69,36 @@ async function buildManifest(manifest) {
     const checksum = await utils.checksumFile(manifest);
     const buildKey = `flatter-${arch}-${checksum}`;
 
-    const restoreId = await cache.restoreCache(CACHE_FLATPAK_BUILDER_DIRS,
-        buildKey, ['flatter-', `flatter-${arch}-`]);
-    if (restoreId)
-        core.info(`Build directory restored from cache: ${restoreId}`);
+    const cacheId = await cache.restoreCache(flatpakBuilder.CACHE_PATHS,
+        buildKey);
 
     await flatpakBuilder.run('_build', manifest);
 
-    const saveId = await cache.saveCache(CACHE_FLATPAK_BUILDER_DIRS,
-        buildKey);
-    if (saveId !== -1)
-        core.info(`Build directory saved to cache: ${saveId}`);
+    if (buildKey !== cacheId) {
+        const saveId = await cache.saveCache(flatpakBuilder.CACHE_PATHS,
+            buildKey);
+        if (saveId !== -1)
+            core.info(`Build directory saved to cache: ${saveId}`);
+    }
 }
 
 /**
  * Run the action
  */
 async function run() {
-    const cacheKey = 'flatter';
     const manifests = utils.getStrvInput('files');
     const repo = core.getInput('repo');
 
     /*
      * Rebuild the repository
      */
-    const repoId = await cache.restoreCache([repo], cacheKey, [cacheKey]);
-    if (repoId)
-        core.info(`Flatpak repository restored from cache: ${repoId}`);
+    await utils.restoreRepository();
 
     for (const manifestPath of manifests)
         await buildManifest(manifestPath);
 
     if (core.getInput('gpg-sign'))
-        await flatpak.signRepository(repo, core.getInput('gpg-sign'));
-
-    const repoSaveId = await cache.saveCache([repo], cacheKey);
-    if (repoSaveId !== -1)
-        core.info(`Flatpak repository saved to cache: ${cacheKey}`);
+        await flatpak.signRepository(repo);
 
     /*
      * GitHub Pages Artifact

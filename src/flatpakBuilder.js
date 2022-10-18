@@ -5,9 +5,14 @@ import * as core from '@actions/core';
 import * as exec from '@actions/exec';
 
 export {
+    CACHE_PATHS,
     run,
 };
 
+
+const CACHE_PATHS = [
+    '.flatpak-builder',
+];
 
 const FLATPAK_BUILDER_OPTIONS = [
     'default-branch',

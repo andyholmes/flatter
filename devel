@@ -1,5 +1,0 @@
-#!/bin/sh -e
-
-ncc build -o dist/main src/main.js &&
-ncc build -o dist/post src/post.js &&
-ncc build -o dist/pre src/pre.js
