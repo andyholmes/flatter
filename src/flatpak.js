@@ -1,13 +1,18 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2022 Andy Holmes <andrew.g.r.holmes@gmail.com>
 
-const core = require('@actions/core');
-const exec = require('@actions/exec');
-const yaml = require('js-yaml');
+import * as core from '@actions/core';
+import * as exec from '@actions/exec';
+import * as yaml from 'js-yaml';
 
-const fs = require('fs').promises;
-const path = require('path');
+import * as fs from 'fs';
+import * as path from 'path';
 
+export  {
+    parseManifest,
+    buildBundle,
+    signRepository,
+};
 
 /**
  * Load a manifest
@@ -15,7 +20,7 @@ const path = require('path');
  * @param {PathLike} manifestPath - A path to a Flatpak manifest
  */
 async function parseManifest(manifestPath) {
-    const data = await fs.readFile(manifestPath);
+    const data = await fs.promises.readFile(manifestPath);
 
     switch (path.extname(manifestPath)) {
         case '.json':
@@ -33,20 +38,21 @@ async function parseManifest(manifestPath) {
 const FLATPAK_BUILD_BUNDLE_OPTIONS = [
     'gpg-sign',
     'gpg-homedir',
+    'gpg-keys',
 ];
 
 /**
  * Build a Flatpak bundle.
  *
- * @param {PathLike} repo - A path to a Flatpak repository
+ * @param {PathLike} location - A path to a Flatpak repository
  * @param {PathLike} fileName - A filename
- * @param {string} appId - The application ID
+ * @param {string} name - An application ID
  * @param {string} [branch] - The Flatpak branch (default: master)
  * @param {string[]} [args] - Extra options for `flatpak build-bundle`
  * @returns {Promise<>} A promise for the operation
  */
-async function buildBundle(repo, fileName, appId, branch = 'master', args = []) {
-    const bundleArgs = new Set([...args]);
+async function buildBundle(location, fileName, name, branch = 'master', args = []) {
+    const bundleArgs = new Set(args);
 
     for (const option of FLATPAK_BUILD_BUNDLE_OPTIONS) {
         if (core.getInput(option))
@@ -56,9 +62,9 @@ async function buildBundle(repo, fileName, appId, branch = 'master', args = []) 
     return exec.exec('flatpak', [
         'build-bundle',
         ...bundleArgs,
-        repo,
+        location,
         fileName,
-        appId,
+        name,
         branch,
     ]);
 }
@@ -66,29 +72,16 @@ async function buildBundle(repo, fileName, appId, branch = 'master', args = []) 
 /**
  * Sign a Flatpak repository.
  *
- * @param {PathLike} repo - A path to a repository
+ * @param {PathLike} location - A path to a repository
  * @param {string} gpgKey - The GPG key to sign with
  */
-async function signRepository(repo, gpgKey) {
+async function signRepository(location, gpgKey) {
     if (!gpgKey)
         return;
 
-    await exec.exec('flatpak', [
-        'build-sign',
-        repo,
-        `--gpg-sign=${gpgKey}`,
-    ]);
-    await exec.exec('flatpak', [
-        'build-update-repo',
-        repo,
-        `--gpg-sign=${gpgKey}`,
-    ]);
+    await exec.exec('flatpak', ['build-sign', location,
+        `--gpg-sign=${gpgKey}`]);
+    await exec.exec('flatpak', ['build-update-repo', location,
+        `--gpg-sign=${gpgKey}`]);
 }
-
-
-module.exports = {
-    parseManifest,
-    buildBundle,
-    signRepository,
-};
 

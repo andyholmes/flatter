@@ -24,12 +24,12 @@ jobs:
           passphrase: ${{ secrets.GPG_PASSPHRASE }}
 
       - name: Build
-        uses: andyholmes/actions/flatter@main
+        uses: andyholmes/flatter@main
         with:
-          manifests: |
+          files: |
             tests/manifests/ca.andyholmes.Test1.json
             tests/manifests/ca.andyholmes.Test2.yml
           gpg-sign: ${{ steps.gpg.outputs.fingerprint }}
-          bundle-artifact: true
-          pages-artifact: true
+          upload-flatpak-bundle: true
+          upload-pages-artifact: true
 

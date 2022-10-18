@@ -1,8 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2022 Andy Holmes <andrew.g.r.holmes@gmail.com>
 
-const core = require('@actions/core');
-const exec = require('@actions/exec');
+import * as core from '@actions/core';
+import * as exec from '@actions/exec';
+
+export {
+    run,
+};
 
 
 const FLATPAK_BUILDER_OPTIONS = [
@@ -45,8 +49,4 @@ function run(directory, manifest, args = []) {
         manifest,
     ]);
 }
-
-module.exports = {
-    run,
-};
 

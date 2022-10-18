@@ -1,15 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2022 Andy Holmes <andrew.g.r.holmes@gmail.com>
 
-const core = require('@actions/core');
-const exec = require('@actions/exec');
-//const github = require('@actions/github');
-const artifact = require('@actions/artifact');
-const cache = require('@actions/cache');
+import * as artifact from '@actions/artifact';
+import * as cache from '@actions/cache';
+import * as core from '@actions/core';
+import * as exec from '@actions/exec';
 
-const flatpak = require('./flatpak.js');
-const flatpakBuilder = require('./flatpakBuilder.js');
-const utils = require('./utils.js');
+import * as flatpak from './flatpak.js';
+import * as flatpakBuilder from './flatpakBuilder.js';
+import * as utils from './utils.js';
 
 const CACHE_FLATPAK_BUILDER_DIRS = ['.flatpak-builder'];
 
@@ -86,11 +85,11 @@ async function buildManifest(manifest) {
 }
 
 /**
- * Run a complete build
+ * Run the action
  */
 async function run() {
     const cacheKey = 'flatter';
-    const manifests = utils.getStrvInput('manifests');
+    const manifests = utils.getStrvInput('files');
     const repo = core.getInput('repo');
 
     /*
@@ -100,8 +99,8 @@ async function run() {
     if (repoId)
         core.info(`Flatpak repository restored from cache: ${repoId}`);
 
-    for (const manifest of manifests)
-        await buildManifest(manifest);
+    for (const manifestPath of manifests)
+        await buildManifest(manifestPath);
 
     if (core.getInput('gpg-sign'))
         await flatpak.signRepository(repo, core.getInput('gpg-sign'));
@@ -113,7 +112,7 @@ async function run() {
     /*
      * GitHub Pages Artifact
      */
-    if (core.getBooleanInput('pages-artifact')) {
+    if (core.getBooleanInput('upload-pages-artifact')) {
         try {
             await uploadRepositoryArtifact(repo);
         } catch (e) {
@@ -124,13 +123,13 @@ async function run() {
     /*
      * Flatpak Bundles
      */
-    if (core.getBooleanInput('bundle-artifact')) {
+    if (core.getBooleanInput('upload-flatpak-bundle')) {
         try {
             for (const manifestPath of manifests) {
                 const manifest = await flatpak.parseManifest(manifestPath);
                 const appId = manifest['app-id'] || manifest['id'];
                 const branch = manifest['branch'] ||
-                    core.getInput('default-branch')
+                    core.getInput('default-branch') ||
                     manifest['default-branch'] ||
                     'master';
 
@@ -142,12 +141,7 @@ async function run() {
     }
 }
 
+run();
 
-module.exports = {
-    run,
-};
-
-
-if (require.main === module)
-    run();
+export default run;
     

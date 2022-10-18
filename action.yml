@@ -1,22 +1,22 @@
-name: "Flattest"
-description: "Build, test and distribute Flatpak applications"
-author: "Andy Holmes"
+name: Flatter
+description: Build and distribute Flatpak applications
+author: Andy Holmes
 branding:
-  icon: "package"
-  color: "blue"
+  icon: package
+  color: blue
 inputs:
-  manifests:
+  files:
     description: >
-      "A list of Flatpak manifests to build."
+      A list of paths to Flatpak manifests.
     required: true
-  pages-artifact:
+  upload-pages-artifact:
     description: >
-      Upload the repository as a GitHub Pages Artifact
+      Upload the repository as a GitHub Pages Artifact.
     default: false
     required: false
-  bundle-artifact:
+  upload-flatpak-bundle:
     description: >
-      "Upload Flatpak bundles as artifacts"
+      Upload each application as a Flatpak bundle.
     default: false
     required: false
 
@@ -24,7 +24,7 @@ inputs:
   arch:
     description: >
       The CPU architecture to build for.
-    default: "x86_64"
+    default: x86_64
     required: false
   default-branch:
     description: >
@@ -36,7 +36,11 @@ inputs:
     required: false
   gpg-homedir:
     description: >
-      The directory to search for GPG keys.
+      A path to search for GPG keys.
+    required: false
+  gpg-keys:
+    description: >
+      A path to load GPG keys.
     required: false
   install-deps-from:
     description: >
@@ -45,8 +49,11 @@ inputs:
   repo:
     description: >
       The folder used to store Flatpak repository files.
-    default: "repo"
+    default: repo
     required: false
 runs:
-  using: "node16"
-  main: "dist/index.js"
+  using: node16
+  pre: dist/pre/index.js
+  main: dist/main/index.js
+  post: dist/post/index.js
+  post-if: 'success()'

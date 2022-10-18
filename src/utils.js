@@ -1,9 +1,15 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2022 Andy Holmes <andrew.g.r.holmes@gmail.com>
 
-const core = require('@actions/core');
-const crypto = require('crypto');
-const fs = require('fs');
+import * as core from '@actions/core';
+
+import * as crypto from 'crypto';
+import * as fs from 'fs';
+
+export {
+    checksumFile,
+    getStrvInput,
+};
 
 
 /**
@@ -39,9 +45,4 @@ function getStrvInput(name) {
         .split("\n")
         .filter(x => x !== '');
 }
-
-module.exports = {
-    checksumFile,
-    getStrvInput,
-};
 
