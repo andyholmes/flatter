@@ -4,9 +4,11 @@
 FROM registry.fedoraproject.org/fedora:latest
 
 # Additional packages:
-#   - rsync: JamesIves/github-pages-deploy-action
-#   - zstd:  actions/cache
+#   - docker: docker/setup-qemu-action
+#   - rsync:  JamesIves/github-pages-deploy-action
+#   - zstd:   actions/cache
 RUN dnf install -y ccache \
+                   docker \
                    flatpak \
                    flatpak-builder \
                    git \
