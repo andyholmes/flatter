@@ -100,6 +100,8 @@ async function run() {
     if (core.getInput('gpg-sign'))
         await flatpak.signRepository(repo);
 
+    await utils.saveRepository();
+
     /*
      * GitHub Pages Artifact
      */

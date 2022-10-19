@@ -3,10 +3,10 @@ name: Test
 on:
   push:
     branches: [main]
-    paths: ['dist/**']
+    paths: [dist/**]
   pull_request:
     branches: [main]
-    paths: ['dist/**']
+    paths: [dist/**]
   workflow_dispatch:
 
 jobs:
@@ -29,7 +29,7 @@ jobs:
           passphrase: ${{ secrets.GPG_PASSPHRASE }}
 
       - name: Build
-        uses: andyholmes/flatter@main
+        uses: andyholmes/flatter@HEAD
         with:
           files: |
             tests/manifests/ca.andyholmes.Test1.json
