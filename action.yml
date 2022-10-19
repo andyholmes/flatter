@@ -39,14 +39,6 @@ inputs:
     description: >
       The fingerprint of the GPG key sign te repository with.
     required: false
-  gpg-homedir:
-    description: >
-      A path to search for GPG keys.
-    required: false
-  gpg-keys:
-    description: >
-      A path to load GPG keys.
-    required: false
   install-deps-from:
     description: >
       The remote to install build dependencies from.
