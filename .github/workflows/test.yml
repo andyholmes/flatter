@@ -17,9 +17,22 @@ jobs:
       image: ghcr.io/andyholmes/flatter/gnome:43
       options: --privileged
 
+    strategy:
+      max-parallel: 1
+      matrix:
+        arch: [x86_64, aarch64]
+      fail-fast: false
+
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+
+      - name: Setup QEMU
+        if: ${{ matrix.arch == 'aarch64' }}
+        id: qemu
+        uses: docker/setup-qemu-action@v2
+        with:
+          platforms: arm64
 
       - name: Setup GPG
         id: gpg
@@ -32,11 +45,12 @@ jobs:
         uses: andyholmes/flatter@main
         with:
           files: |
-            tests/manifests/ca.andyholmes.Test1.json
-            tests/manifests/ca.andyholmes.Test2.yml
+            tests/manifests/ca.andyholmes.Flatter.yml
+            tests/manifests/name.ptomato.Bloatpad.json
+          arch: ${{ matrix.arch }}
           gpg-sign: ${{ steps.gpg.outputs.fingerprint }}
           upload-flatpak-bundle: true
-          upload-pages-artifact: true
+          upload-pages-artifact: ${{ matrix.arch == 'aarch64' }}
 
   deploy:
     name: Deploy

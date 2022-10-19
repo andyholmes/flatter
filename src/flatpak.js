@@ -10,9 +10,81 @@ import * as path from 'path';
 
 export  {
     parseManifest,
+    builder,
     buildBundle,
-    signRepository,
+    buildSign,
+    buildUpdateRepo,
 };
+
+
+/*
+ * Action Inputs
+ *
+ * Each array is a list of GitHub Action inputs that are automatically mapped to
+ * command-line arguments, for the given Flatpak command.
+ */
+const BUILDER_INPUTS = [
+    'default-branch',
+    'gpg-sign',
+    'install-deps-from',
+    'repo',
+];
+
+const BUILD_BUNDLE_INPUTS = [
+    'gpg-sign',
+];
+
+const BUILD_SIGN_INPUTS = [
+    'gpg-sign',
+];
+
+const BUILD_UPDATE_REPO_INPUTS = [
+    'gpg-sign',
+];
+
+
+/**
+ * Parse and coalesce arguments for a command-line program.
+ *
+ * This function takes lists of strings in the form of `--option` and
+ * `--option=value` and eliminates duplicates by progressively applying
+ * @defaultArgs, @actionInputs and @overrides.
+ *
+ * @param {string[]} [defaults] - A list of default arguments
+ * @param {string[]} [actionInputs] - A list of mappable action inputs
+ * @param {string[]} [overrides] - A list of override arguments
+ * @returns {string[]} A list of arguments
+ */
+function parseArguments(defaults = [], actionInputs = [], overrides = []) {
+    /* Use a Map to coalesce options */
+    const options = new Map();
+    const pattern = /--([^=]+)(?:=([^\b]+))?/;
+
+    /* Parse default arguments into key-value pairs */
+    for (const arg of defaults) {
+        const [, option, value] = pattern.exec(arg);
+        option && options.set(option, value);
+    }
+
+    /* Map GitHub Action inputs to key-value pairs */
+    for (const input of actionInputs) {
+        const value = core.getInput(input);
+        value && options.set(input, value);
+    }
+
+    /* Parse overrides into key-value pairs */
+    for (const arg of overrides) {
+        const [, option, value] = pattern.exec(arg);
+        option && options.set(option, value);
+    }
+
+    const args = [];
+
+    for (const [option, value] of options)
+        args.push(value ? `--${option}=${value}` : `--${option}`);
+
+    return args;
+}
 
 /**
  * Load a manifest
@@ -35,14 +107,34 @@ async function parseManifest(manifestPath) {
     }
 }
 
-const FLATPAK_BUILD_BUNDLE_OPTIONS = [
-    'gpg-sign',
-    'gpg-homedir',
-    'gpg-keys',
-];
+/**
+ * Build a Flatpak manifest.
+ *
+ * @param {PathLike} directory - A path to a build directory
+ * @param {PathLike} manifest - A path to a manifest
+ * @param {string[]} [args] - Command-line options for `flatpak-builder`
+ * @returns {Promise<>} A promise for the operation
+ */
+async function builder(directory, manifest, args = []) {
+    core.debug(`${directory}, ${manifest}, ${args}`);
+
+    const builderArgs = parseArguments([
+        '--ccache',
+        '--disable-rofiles-fuse',
+        '--force-clean',
+    ], BUILDER_INPUTS, args);
+
+    await exec.exec('flatpak-builder', [
+        ...builderArgs,
+        directory,
+        manifest,
+    ]);
+}
 
 /**
- * Build a Flatpak bundle.
+ * Create a single-file bundle from a local repository.
+ *
+ * See: `flatpak build-bundle --help`.
  *
  * @param {PathLike} location - A path to a Flatpak repository
  * @param {PathLike} fileName - A filename
@@ -52,14 +144,11 @@ const FLATPAK_BUILD_BUNDLE_OPTIONS = [
  * @returns {Promise<>} A promise for the operation
  */
 async function buildBundle(location, fileName, name, branch = 'master', args = []) {
-    const bundleArgs = new Set(args);
+    core.debug(`${location}, ${fileName}, ${name}, ${branch}, ${args}`);
 
-    for (const option of FLATPAK_BUILD_BUNDLE_OPTIONS) {
-        if (core.getInput(option))
-            bundleArgs.add(`--${option}=${core.getInput(option)}`);
-    }
+    const bundleArgs = parseArguments([], BUILD_BUNDLE_INPUTS, args);
 
-    return exec.exec('flatpak', [
+    await exec.exec('flatpak', [
         'build-bundle',
         ...bundleArgs,
         location,
@@ -72,22 +161,37 @@ async function buildBundle(location, fileName, name, branch = 'master', args = [
 /**
  * Sign a Flatpak repository.
  *
- * @param {PathLike} location - A path to a repository
- * @param {string} gpgKey - The GPG key to sign with
+ * @param {PathLike} locateion - A path to a Flatpak repository
+ * @param {string[]} [args] - Command-line options for `flatpak build-sign`
+ * @returns {Promise<>} A promise for the operation
  */
-async function signRepository(location, args = []) {
-    const signArgs = new Set(args);
+async function buildSign(location, args = []) {
+    core.debug(`${location}, ${args}`);
 
-    for (const option of ['gpg-sign', 'gpg-homedir']) {
-        if (core.getInput(option))
-            signArgs.add(`--${option}=${core.getInput(option)}`);
-    }
+    const signArgs = parseArguments([], BUILD_SIGN_INPUTS, args);
 
     await exec.exec('flatpak', [
         'build-sign',
         ...signArgs,
         location,
     ]);
+}
+
+
+/**
+ * Update repository metadata.
+ *
+ * @param {PathLike} locateion - A path to a Flatpak repository
+ * @param {string[]} [args] - Command-line options for `flatpak build-sign`
+ * @returns {Promise<>} A promise for the operation
+ */
+async function buildUpdateRepo(location, args = []) {
+    core.debug(`${location}, ${args}`);
+
+    const signArgs = parseArguments([
+        '--prune',
+    ], BUILD_UPDATE_REPO_INPUTS, args);
+
     await exec.exec('flatpak', [
         'build-update-repo',
         ...signArgs,

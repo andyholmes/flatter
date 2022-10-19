@@ -4,48 +4,25 @@
 import * as artifact from '@actions/artifact';
 import * as cache from '@actions/cache';
 import * as core from '@actions/core';
-import * as exec from '@actions/exec';
 
 import * as flatpak from './flatpak.js';
-import * as flatpakBuilder from './flatpakBuilder.js';
 import * as utils from './utils.js';
 
 
-/**
- * Upload a Flatpak repository as a GitHub Pages Artifact.
- *
- * See: https://github.com/actions/upload-pages-artifact/blob/main/action.yml
- *
- * @param {PathLike} repositoryPath - A path to a Flatpak repository
- */
-async function uploadRepositoryArtifact(repositoryPath) {
-    const outputPath = 'artifact.tar';
-    await exec.exec('tar', [
-        '--dereference',
-        '--hard-dereference',
-        '--directory', repositoryPath,
-        '-cf', outputPath,
-        '--exclude=.git',
-        '--exclude=.github',
-        '.',
-    ]);
-
-    const artifactClient = artifact.create();
-    await artifactClient.uploadArtifact('github-pages', [outputPath], '.');
-}
 
 /**
  * Build and upload a Flatpak bundle.
  *
  * @param {PathLike} repo - A path to a Flatpak repository
- * @param {string} appId - The application ID
- * @param {string} branch - The Flatpak branch
+ * @param {PathLike} manifest - A path to a Flatpak manifest
  * @returns {Promise<>} A promise for the operation
  */
-async function uploadBundleArtifact(repo, appId, branch) {
-    core.info(`Building ${appId}...`);
-
+async function uploadBundleArtifact(repo, manifest) {
+    const metadata = await flatpak.parseManifest(manifest);
+    const appId = metadata['app-id'] || metadata['id'];
+    const branch = metadata['branch'] || metadata['default-branch'] || 'master';
     const fileName = `${appId}.flatpak`;
+
     await flatpak.buildBundle(repo, fileName, appId, branch);
 
     const artifactName = `${appId}-${core.getInput('arch')}`;
@@ -65,30 +42,23 @@ async function uploadBundleArtifact(repo, appId, branch) {
  * @param {PathLike} manifest - A path to a Flatpak manifest
  */
 async function buildManifest(manifest) {
-    core.startGroup('Restoring build directory from cache...')
     const arch = core.getInput('arch');
     const checksum = await utils.checksumFile(manifest);
     const stateDir = `.flatpak-builder-${arch}-${checksum}`;
 
-    const cacheDirs = [stateDir];
-    const cacheKey = `flatter-${arch}-${checksum}`;
+    let cacheId, cacheKey;
+    if ((cacheKey = core.getInput('cache-key')) && cache.isFeatureAvailable()) {
+        cacheKey = `${cacheKey}-${arch}-${checksum}`;
+        cacheId = await cache.restoreCache([stateDir], cacheKey);
+    }
 
-    const cacheId = await cache.restoreCache(cacheDirs, cacheKey);
-    core.endGroup();
-
-    core.startGroup(`Building "${manifest}"...`)
-    await flatpakBuilder.run('_build', manifest, [
+    await flatpak.builder('_build', manifest, [
         `--state-dir=${stateDir}`,
     ]);
-    core.endGroup();
 
-    core.startGroup('Saving build directory to cache...');
     if (cacheId && cacheId !== cacheKey) {
-        const saveId = await cache.saveCache(cacheDirs, cacheKey);
-        if (saveId !== -1)
-            core.info(`Build directory saved to cache with key "${cacheKey}"`);
+        await cache.saveCache([stateDir], cacheKey);
     }
-    core.endGroup();
 }
 
 /**
@@ -103,11 +73,26 @@ async function run() {
      */
     await utils.restoreRepository();
 
-    for (const manifestPath of manifests)
-        await buildManifest(manifestPath);
+    for (const manifest of manifests) {
+        core.startGroup(`Building "${manifest}"...`);
 
-    if (core.getInput('gpg-sign'))
-        await flatpak.signRepository(repo);
+        try {
+            await buildManifest(manifest);
+        } catch (e) {
+            core.warning(`Failed to build "${manifest}": ${e.message}`);
+        }
+
+        core.endGroup();
+    }
+
+    if (core.getInput('gpg-sign')) {
+        core.startGroup('Signing Flatpak repository...');
+
+        await flatpak.buildSign(repo);
+        await flatpak.buildUpdateRepo(repo);
+
+        core.endGroup();
+    }
 
     await utils.saveRepository();
 
@@ -115,31 +100,32 @@ async function run() {
      * GitHub Pages Artifact
      */
     if (core.getBooleanInput('upload-pages-artifact')) {
+        core.startGroup('Uploading GitHub Pages artifact...');
+
         try {
-            await uploadRepositoryArtifact(repo);
+            await utils.uploadPagesArtifact(repo);
         } catch (e) {
-            core.warning(`GitHub Pages failed: ${e.message}`);
+            core.warning(`Failed to upload GitHub Pages artifact: ${e.message}`);
         }
+
+        core.endGroup();
     }
 
     /*
      * Flatpak Bundles
      */
     if (core.getBooleanInput('upload-flatpak-bundle')) {
-        try {
-            for (const manifestPath of manifests) {
-                const manifest = await flatpak.parseManifest(manifestPath);
-                const appId = manifest['app-id'] || manifest['id'];
-                const branch = manifest['branch'] ||
-                    core.getInput('default-branch') ||
-                    manifest['default-branch'] ||
-                    'master';
+        core.startGroup('Uploading Flatpak bundles...');
 
-                await uploadBundleArtifact(repo, appId, branch);
+        for (const manifest of manifests) {
+            try {
+                await uploadBundleArtifact(repo, manifest);
+            } catch (e) {
+                core.warning(`Failed to upload "${manifest}": ${e.message}`);
             }
-        } catch (e) {
-            core.warning(`Flatpak Bundle failed: ${e.message}`);
         }
+
+        core.endGroup();
     }
 }
 

@@ -1,19 +1,18 @@
 ---
-app-id: ca.andyholmes.Test2
+app-id: ca.andyholmes.Flatter
 branch: nightly
 runtime: org.gnome.Platform
 runtime-version: "43"
 sdk: org.gnome.Sdk
-command: flatter-test
+command: flatter
 finish-args:
   - --device=dri
   - --share=ipc
   - --socket=fallback-x11
   - --socket=wayland
 modules:
-  - name: flatter-test
+  - name: flatter
     buildsystem: simple
     build-commands:
       - mkdir -p /app/bin
-      - touch /app/bin/flatter-test
-      - chmod a+x /app/bin/flatter-test
+      - ln -sf /bin/echo /app/bin/flatter

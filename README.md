@@ -51,21 +51,21 @@ manifests (JSON or YAML) to build. Typically one or both of
 `upload-pages-artifact` and `upload-flatpak-bundle` will be set to `true`,
 depending on the deployment style.
 
-| Name                    | Default | Description                              |
-|-------------------------|---------|------------------------------------------|
-| `files`                 | None    | A list of files to build                 |
-| `cache-key`             | None    | A cache key                              |
-| `upload-flatpak-bundle` | `false` | Upload each application as a Flatpak     |
-| `upload-pages-artifact` | `false` | Upload the repo for GitHub Pages         |
+| Name                    | Default   | Description                            |
+|-------------------------|-----------|----------------------------------------|
+| `files` (REQUIRED)      | None      | A list of manifests to build           |
+| `cache-key`             | `flatter` | A cache key, or `''` to disable        |
+| `upload-flatpak-bundle` | `false`   | Upload each application as a Flatpak   |
+| `upload-pages-artifact` | `false`   | Upload the repo for GitHub Pages       |
 
 There are also inputs that correspond to command-line options for `flatpak` and
 `flatpak-builder`, most commonly used:
 
-| Name                    | Default  | Description                             |
-|-------------------------|----------|-----------------------------------------|
-| `arch`                  | `x86_64` | The architecture to build for           |
-| `gpg-sign`              | None     | A GPG Key fingerprint                   |
-| `repo`                  | `repo`   | The repository directory                |
+| Name                    | Default   | Description                            |
+|-------------------------|-----------|----------------------------------------|
+| `arch`                  | `x86_64`  | The architecture to build for          |
+| `gpg-sign`              | None      | A GPG Key fingerprint                  |
+| `repo`                  | `repo`    | The repository directory               |
 
 See [`action.yml`](action.yml) for a full list of inputs.
 
