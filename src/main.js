@@ -65,21 +65,30 @@ async function uploadBundleArtifact(repo, appId, branch) {
  * @param {PathLike} manifest - A path to a Flatpak manifest
  */
 async function buildManifest(manifest) {
+    core.startGroup('Restoring build directory from cache...')
     const arch = core.getInput('arch');
     const checksum = await utils.checksumFile(manifest);
-    const buildKey = `flatter-${arch}-${checksum}`;
+    const stateDir = `.flatpak-builder-${arch}-${checksum}`;
 
-    const cacheId = await cache.restoreCache(flatpakBuilder.CACHE_PATHS,
-        buildKey);
+    const cacheDirs = [stateDir];
+    const cacheKey = `flatter-${arch}-${checksum}`;
 
-    await flatpakBuilder.run('_build', manifest);
+    const cacheId = await cache.restoreCache(cacheDirs, cacheKey);
+    core.endGroup();
 
-    if (buildKey !== cacheId) {
-        const saveId = await cache.saveCache(flatpakBuilder.CACHE_PATHS,
-            buildKey);
+    core.startGroup(`Building "${manifest}"...`)
+    await flatpakBuilder.run('_build', manifest, [
+        `--state-dir=${stateDir}`,
+    ]);
+    core.endGroup();
+
+    core.startGroup('Saving build directory to cache...');
+    if (cacheId && cacheId !== cacheKey) {
+        const saveId = await cache.saveCache(cacheDirs, cacheKey);
         if (saveId !== -1)
-            core.info(`Build directory saved to cache: ${saveId}`);
+            core.info(`Build directory saved to cache with key "${cacheKey}"`);
     }
+    core.endGroup();
 }
 
 /**
