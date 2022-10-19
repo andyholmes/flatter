@@ -29,7 +29,7 @@ jobs:
           passphrase: ${{ secrets.GPG_PASSPHRASE }}
 
       - name: Build
-        uses: andyholmes/flatter@HEAD
+        uses: andyholmes/flatter@main
         with:
           files: |
             tests/manifests/ca.andyholmes.Test1.json
