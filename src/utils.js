@@ -11,6 +11,7 @@ export {
     checksumFile,
     getStrvInput,
     restoreRepository,
+    saveRepository,
 };
 
 
@@ -54,29 +55,68 @@ function getStrvInput(name) {
  * @returns {Promise<>} A promise for the operation
  */
 async function restoreRepository() {
+    core.startGroup('Restoring repository from cache...');
+
     try {
-        // Save the cache key for post action
+        // Check if caching is enabled and supported
         const cacheKey = core.getInput('cache-key');
-        core.saveState('cache-key', cacheKey);
-        if (!cacheKey) {
+        if (!cacheKey || !cache.isFeatureAvailable()) {
             core.debug('Cache disabled');
             return;
         }
 
+        // Restore the repository from cache
         const cachePaths = [core.getInput('repo')];
         const cacheId = await cache.restoreCache(cachePaths, cacheKey);
 
         if (!cacheId) {
-            core.debug(`Cache not found with ${cacheKey}`);
+            core.debug(`Cache not found with key "${cacheKey}"`);
             return;
         }
 
-        // Save the cache state for post action
+        // Check if there was a hit on the cache key
         core.saveState('cache-hit', cacheKey === cacheId);
-
-        core.info(`Cache restored with ${cacheKey}`);
-    } catch (error) {
-        core.warning(`Failed to restore cache: ${error.message}`);
+        core.info(`Cache restored with key "${cacheKey}"`);
+    } catch (e) {
+        core.warning(`Failed to restore repository from cache: ${e.message}`);
     }
+
+    core.endGroup();
+}
+
+/**
+ * Save the Flatpak repository to cache.
+ *
+ * @returns {Promise<>} A promise for the operation
+ */
+async function saveRepository() {
+    core.startGroup('Saving repository to cache...');
+
+    try {
+        // Check if caching is enabled and supported
+        const cacheKey = core.getInput('cache-key');
+        if (!cacheKey || !cache.isFeatureAvailable()) {
+            core.debug('Cache disabled');
+            return;
+        }
+
+        // There was a hit on the cache key
+        const cacheHit = core.getState('cache-hit');
+        if (cacheHit) {
+            core.debug(`Cache hit with key "${cacheKey}"`);
+            return;
+        }
+
+        // Save the repository to cache
+        const cachePaths = [core.getInput('repo')];
+        const cacheId = await cache.saveCache(cachePaths, cacheKey);
+
+        if (cacheId != -1)
+            core.info(`Cache saved with key "${cacheKey}"`);
+    } catch (e) {
+        core.warning(`Failed to save repository to cache: ${e.message}`);
+    }
+
+    core.endGroup();
 }
 
