@@ -24,7 +24,6 @@ export  {
  * command-line arguments, for the given Flatpak command.
  */
 const BUILDER_INPUTS = [
-    'default-branch',
     'gpg-sign',
     'install-deps-from',
     'repo',

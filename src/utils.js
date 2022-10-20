@@ -64,7 +64,7 @@ async function restoreRepository() {
         // Check if caching is enabled and supported
         const cacheKey = core.getInput('cache-key');
         if (!cacheKey || !cache.isFeatureAvailable()) {
-            core.debug('Cache disabled');
+            core.info('Cache disabled');
             return;
         }
 
@@ -73,7 +73,7 @@ async function restoreRepository() {
         const cacheId = await cache.restoreCache(cachePaths, cacheKey);
 
         if (!cacheId) {
-            core.debug(`Cache not found with key "${cacheKey}"`);
+            core.info(`Cache not found with key "${cacheKey}"`);
             return;
         }
 
@@ -99,14 +99,14 @@ async function saveRepository() {
         // Check if caching is enabled and supported
         const cacheKey = core.getInput('cache-key');
         if (!cacheKey || !cache.isFeatureAvailable()) {
-            core.debug('Cache disabled');
+            core.info('Cache disabled');
             return;
         }
 
         // There was a hit on the cache key
         const cacheHit = core.getState('cache-hit');
         if (cacheHit) {
-            core.debug(`Cache hit with key "${cacheKey}"`);
+            core.info(`Cache hit with key "${cacheKey}"`);
             return;
         }
 

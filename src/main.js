@@ -4,11 +4,49 @@
 import * as artifact from '@actions/artifact';
 import * as cache from '@actions/cache';
 import * as core from '@actions/core';
+import * as exec from '@actions/exec';
+import * as github from '@actions/github';
+
+import * as fs from 'fs';
 
 import * as flatpak from './flatpak.js';
 import * as utils from './utils.js';
 
 
+/**
+ * Generate a .flatpakrepo file and copy it to the repository directory.
+ *
+ * @param {PathLike} repoPath - A path to a Flatpak repository
+ * @returns {Promise<>} A promise for the operation
+ */
+async function generateFlatpakrepo(repoPath) {
+    /* Collect the .flatpakrepo fields */
+    const {repository} = github.context.payload;
+    const title = repository.name;
+    const description = repository.description;
+    const url = `https://${repository.owner.login}.github.io/${repository.name}`;
+    const homepage = repository.homepage || repository.html_url;
+    const icon = 'https://raw.githubusercontent.com/flatpak/flatpak/main/flatpak.png';
+
+    /* Generate a .flatpakrepo file */
+    let flatpakrepo =
+`[Flatpak Repo]
+Title=${title}
+Description=${description}
+Url=${url}
+Homepage=${homepage}
+Icon=${icon}`;
+
+    /* Append the GPG Public Key */
+    if (core.getInput('gpg-sign')) {
+        const {stdout} = await exec.getExecOutput('gpg2',
+            ['--armor', '--export', core.getInput('gpg-sign')]);
+        const publicKey = stdout.split('\n').slice(2, -2).join('');
+        flatpakrepo = `${flatpakrepo}\nGPGKey=${publicKey}`;
+    }
+
+    await fs.promises.writeFile(`${repoPath}/index.flatpakrepo`, flatpakrepo);
+}
 
 /**
  * Build and upload a Flatpak bundle.
@@ -90,6 +128,18 @@ async function run() {
 
         await flatpak.buildSign(repo);
         await flatpak.buildUpdateRepo(repo);
+
+        core.endGroup();
+    }
+
+    if (core.getBooleanInput('flatpakrepo')) {
+        core.startGroup('Generating .flatpakrepo...');
+
+        try {
+            await generateFlatpakrepo(repo);
+        } catch (e) {
+            core.warning(`Failed to generate .flatpakrepo: ${e.message}`);
+        }
 
         core.endGroup();
     }

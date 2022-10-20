@@ -16,13 +16,20 @@ inputs:
     required: false
   upload-pages-artifact:
     description: >
-      Upload the repository as a GitHub Pages Artifact.
+      Upload the repository as a GitHub Pages artifact.
     default: false
     required: false
   upload-flatpak-bundle:
     description: >
-      Upload each application as a Flatpak bundle.
+      Upload each application as a Flatpak artifact.
     default: false
+    required: false
+
+  # Repository options
+  flatpakrepo:
+    description: >
+      Include a generated .flatpakrepo file in the repository.
+    default: true
     required: false
 
   # Command-line Options
