@@ -8,6 +8,7 @@ import * as exec from '@actions/exec';
 import * as github from '@actions/github';
 
 import * as fs from 'fs';
+import * as path from 'path';
 
 import * as flatpak from './flatpak.js';
 import * as utils from './utils.js';
@@ -46,6 +47,22 @@ Icon=${icon}`;
     }
 
     await fs.promises.writeFile(`${repoPath}/index.flatpakrepo`, flatpakrepo);
+}
+
+/**
+ * Include files the repository directory.
+ *
+ * @param {PathLike} repoPath - A path to a Flatpak repository
+ * @returns {Promise<>} A promise for the operation
+ */
+async function includeFiles(repoPath) {
+    const files = utils.getStrvInput('include-files');
+    const operations = files.map(src => {
+        const dest = path.join(repoPath, path.basename(src));
+        return fs.promises.copyFile(src, dest);
+    });
+
+    return Promise.allSettled(operations);
 }
 
 /**
@@ -139,6 +156,18 @@ async function run() {
             await generateFlatpakrepo(repo);
         } catch (e) {
             core.warning(`Failed to generate .flatpakrepo: ${e.message}`);
+        }
+
+        core.endGroup();
+    }
+
+    if (core.getInput('include-files')) {
+        core.startGroup('Copying extra files...');
+
+        try {
+            await includeFiles(repo);
+        } catch (e) {
+            core.warning(`Failed to copy extra files: ${e.message}`);
         }
 
         core.endGroup();
