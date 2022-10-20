@@ -74560,10 +74560,10 @@ var exec = __nccwpck_require__(1514);
 var github = __nccwpck_require__(5438);
 // EXTERNAL MODULE: external "fs"
 var external_fs_ = __nccwpck_require__(5747);
-// EXTERNAL MODULE: ./node_modules/js-yaml/index.js
-var js_yaml = __nccwpck_require__(1917);
 // EXTERNAL MODULE: external "path"
 var external_path_ = __nccwpck_require__(5622);
+// EXTERNAL MODULE: ./node_modules/js-yaml/index.js
+var js_yaml = __nccwpck_require__(1917);
 ;// CONCATENATED MODULE: ./src/flatpak.js
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2022 Andy Holmes <andrew.g.r.holmes@gmail.com>
@@ -74920,6 +74920,7 @@ async function uploadPagesArtifact(directory) {
 
 
 
+
 /**
  * Generate a .flatpakrepo file and copy it to the repository directory.
  *
@@ -74953,6 +74954,22 @@ Icon=${icon}`;
     }
 
     await external_fs_.promises.writeFile(`${repoPath}/index.flatpakrepo`, flatpakrepo);
+}
+
+/**
+ * Include files the repository directory.
+ *
+ * @param {PathLike} repoPath - A path to a Flatpak repository
+ * @returns {Promise<>} A promise for the operation
+ */
+async function includeFiles(repoPath) {
+    const files = getStrvInput('include-files');
+    const operations = files.map(src => {
+        const dest = external_path_.join(repoPath, external_path_.basename(src));
+        return external_fs_.promises.copyFile(src, dest);
+    });
+
+    return Promise.allSettled(operations);
 }
 
 /**
@@ -75046,6 +75063,18 @@ async function run() {
             await generateFlatpakrepo(repo);
         } catch (e) {
             core.warning(`Failed to generate .flatpakrepo: ${e.message}`);
+        }
+
+        core.endGroup();
+    }
+
+    if (core.getInput('include-files')) {
+        core.startGroup('Copying extra files...');
+
+        try {
+            await includeFiles(repo);
+        } catch (e) {
+            core.warning(`Failed to copy extra files: ${e.message}`);
         }
 
         core.endGroup();

@@ -41,6 +41,10 @@ jobs:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
           passphrase: ${{ secrets.GPG_PASSPHRASE }}
 
+      - name: Generate CNAME
+        run: |
+          echo "flatter.andyholmes.ca" > CNAME
+
       - name: Build
         uses: andyholmes/flatter@main
         with:
@@ -51,6 +55,10 @@ jobs:
           gpg-sign: ${{ steps.gpg.outputs.fingerprint }}
           upload-flatpak-bundle: true
           upload-pages-artifact: ${{ matrix.arch == 'aarch64' }}
+          include-files: |
+            tests/index.html
+            tests/default.css
+            CNAME
 
   deploy:
     name: Deploy

@@ -31,16 +31,16 @@ inputs:
       Include a generated .flatpakrepo file in the repository.
     default: true
     required: false
+  include-files:
+    description: >
+      Extra files to include in the repository.
+    required: false
 
   # Command-line Options
   arch:
     description: >
       The CPU architecture to build for.
     default: x86_64
-    required: false
-  default-branch:
-    description: >
-      The Flatpak default branch.
     required: false
   gpg-sign:
     description: >
