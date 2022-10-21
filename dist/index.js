@@ -74057,24 +74057,17 @@ const BUILD_UPDATE_REPO_INPUTS = [
  * Parse and coalesce arguments for a command-line program.
  *
  * This function takes lists of strings in the form of `--option` and
- * `--option=value` and eliminates duplicates by progressively applying
- * @defaultArgs, @actionInputs and @overrides.
+ * `--option=value` and eliminates duplicates; first parsing @actionInputs and
+ * then applying @overrides.
  *
- * @param {string[]} [defaults] - A list of default arguments
- * @param {string[]} [actionInputs] - A list of mappable action inputs
+ * @param {string[]} [actionInputs] - Action inputs that map to CLI options
  * @param {string[]} [overrides] - A list of override arguments
  * @returns {string[]} A list of arguments
  */
-function parseArguments(defaults = [], actionInputs = [], overrides = []) {
+function parseArguments(actionInputs = [], overrides = []) {
     /* Use a Map to coalesce options */
     const options = new Map();
     const pattern = /--([^=]+)(?:=([^\b]+))?/;
-
-    /* Parse default arguments into key-value pairs */
-    for (const arg of defaults) {
-        const [, option, value] = pattern.exec(arg);
-        option && options.set(option, value);
-    }
 
     /* Map GitHub Action inputs to key-value pairs */
     for (const input of actionInputs) {
@@ -74128,11 +74121,7 @@ async function parseManifest(manifestPath) {
 async function builder(directory, manifest, args = []) {
     core.debug(`${directory}, ${manifest}, ${args}`);
 
-    const builderArgs = parseArguments([
-        '--ccache',
-        '--disable-rofiles-fuse',
-        '--force-clean',
-    ], BUILDER_INPUTS, args);
+    const builderArgs = parseArguments(BUILDER_INPUTS, args);
 
     await exec.exec('flatpak-builder', [
         ...builderArgs,
@@ -74156,7 +74145,7 @@ async function builder(directory, manifest, args = []) {
 async function buildBundle(location, fileName, name, branch = 'master', args = []) {
     core.debug(`${location}, ${fileName}, ${name}, ${branch}, ${args}`);
 
-    const bundleArgs = parseArguments([], BUILD_BUNDLE_INPUTS, args);
+    const bundleArgs = parseArguments(BUILD_BUNDLE_INPUTS, args);
 
     await exec.exec('flatpak', [
         'build-bundle',
@@ -74178,7 +74167,7 @@ async function buildBundle(location, fileName, name, branch = 'master', args = [
 async function buildSign(location, args = []) {
     core.debug(`${location}, ${args}`);
 
-    const signArgs = parseArguments([], BUILD_SIGN_INPUTS, args);
+    const signArgs = parseArguments(BUILD_SIGN_INPUTS, args);
 
     await exec.exec('flatpak', [
         'build-sign',
@@ -74195,12 +74184,10 @@ async function buildSign(location, args = []) {
  * @param {string[]} [args] - Command-line options for `flatpak build-sign`
  * @returns {Promise<>} A promise for the operation
  */
-async function buildUpdateRepo(location, args = []) {
+async function buildUpdateRepo(location, args = ['--prune']) {
     core.debug(`${location}, ${args}`);
 
-    const signArgs = parseArguments([
-        '--prune',
-    ], BUILD_UPDATE_REPO_INPUTS, args);
+    const signArgs = parseArguments(BUILD_UPDATE_REPO_INPUTS, args);
 
     await exec.exec('flatpak', [
         'build-update-repo',
@@ -74465,6 +74452,9 @@ async function buildManifest(manifest) {
     }
 
     await builder('_build', manifest, [
+        '--ccache',
+        '--disable-rofiles-fuse',
+        '--force-clean',
         `--state-dir=${stateDir}`,
     ]);
 

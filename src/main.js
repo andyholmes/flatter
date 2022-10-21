@@ -108,6 +108,9 @@ async function buildManifest(manifest) {
     }
 
     await flatpak.builder('_build', manifest, [
+        '--ccache',
+        '--disable-rofiles-fuse',
+        '--force-clean',
         `--state-dir=${stateDir}`,
     ]);
 
