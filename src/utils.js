@@ -70,8 +70,14 @@ async function restoreRepository() {
 
         // Restore the repository from cache
         const cachePaths = [core.getInput('repo')];
-        const cacheKey = `${baseKey}-${Date.now()}`;
-        const restoreKeys = [`${baseKey}-`];
+        const cacheKey = core.getInput('gpg-sign')
+            ? `${baseKey}-${core.getInput('gpg-sign')}-${Date.now()}`
+            : `${baseKey}-${Date.now()}`;
+        const restoreKeys = [
+            core.getInput('gpg-sign')
+                ? `${baseKey}-${core.getInput('gpg-sign')}-`
+                : `${baseKey}-`,
+        ];
         const cacheId = await cache.restoreCache(cachePaths, cacheKey,
             restoreKeys);
 
@@ -101,8 +107,10 @@ async function saveRepository() {
         }
 
         // Save the repository to cache
-        const cacheKey = `${baseKey}-${Date.now()}`;
         const cachePaths = [core.getInput('repo')];
+        const cacheKey = core.getInput('gpg-sign')
+            ? `${baseKey}-${core.getInput('gpg-sign')}-${Date.now()}`
+            : `${baseKey}-${Date.now()}`;
         const cacheId = await cache.saveCache(cachePaths, cacheKey);
 
         if (cacheId != -1)
