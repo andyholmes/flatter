@@ -62,24 +62,21 @@ async function restoreRepository() {
 
     try {
         // Check if caching is enabled and supported
-        const cacheKey = core.getInput('cache-key');
-        if (!cacheKey || !cache.isFeatureAvailable()) {
+        const baseKey = core.getInput('cache-key');
+        if (!baseKey || !cache.isFeatureAvailable()) {
             core.info('Cache disabled');
             return;
         }
 
         // Restore the repository from cache
         const cachePaths = [core.getInput('repo')];
-        const cacheId = await cache.restoreCache(cachePaths, cacheKey);
+        const cacheKey = `${baseKey}-${Date.now()}`;
+        const restoreKeys = [`${baseKey}-`];
+        const cacheId = await cache.restoreCache(cachePaths, cacheKey,
+            restoreKeys);
 
-        if (!cacheId) {
-            core.info(`Cache not found with key "${cacheKey}"`);
-            return;
-        }
-
-        // Check if there was a hit on the cache key
-        core.saveState('cache-hit', cacheKey === cacheId);
-        core.info(`Cache restored with key "${cacheKey}"`);
+        if (cacheId)
+            core.info(`Cache "${cacheId}" restored with key "${cacheKey}"`);
     } catch (e) {
         core.warning(`Failed to restore repository from cache: ${e.message}`);
     }
@@ -97,25 +94,19 @@ async function saveRepository() {
 
     try {
         // Check if caching is enabled and supported
-        const cacheKey = core.getInput('cache-key');
-        if (!cacheKey || !cache.isFeatureAvailable()) {
+        const baseKey = core.getInput('cache-key');
+        if (!baseKey || !cache.isFeatureAvailable()) {
             core.info('Cache disabled');
             return;
         }
 
-        // There was a hit on the cache key
-        const cacheHit = core.getState('cache-hit');
-        if (cacheHit) {
-            core.info(`Cache hit with key "${cacheKey}"`);
-            return;
-        }
-
         // Save the repository to cache
+        const cacheKey = `${baseKey}-${Date.now()}`;
         const cachePaths = [core.getInput('repo')];
         const cacheId = await cache.saveCache(cachePaths, cacheKey);
 
         if (cacheId != -1)
-            core.info(`Cache saved with key "${cacheKey}"`);
+            core.info(`Cache "${cacheId}" saved with key "${cacheKey}"`);
     } catch (e) {
         core.warning(`Failed to save repository to cache: ${e.message}`);
     }
