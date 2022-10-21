@@ -14,18 +14,16 @@ inputs:
       An optional cache key.
     default: 'flatter'
     required: false
-  upload-pages-artifact:
-    description: >
-      Upload the repository as a GitHub Pages artifact.
-    default: false
-    required: false
   upload-flatpak-bundle:
     description: >
       Upload each application as a Flatpak artifact.
     default: false
     required: false
-
-  # Repository options
+  upload-pages-artifact:
+    description: >
+      Upload the repository as a GitHub Pages artifact.
+    default: false
+    required: false
   flatpakrepo:
     description: >
       Include a generated .flatpakrepo file in the repository.
@@ -34,6 +32,11 @@ inputs:
   include-files:
     description: >
       Extra files to include in the repository.
+    required: false
+  cache-key:
+    description: >
+      An optional cache key.
+    default: 'flatter'
     required: false
 
   # Command-line Options
@@ -44,7 +47,7 @@ inputs:
     required: false
   gpg-sign:
     description: >
-      The fingerprint of the GPG key sign te repository with.
+      The fingerprint of a GPG key to sign the repository with.
     required: false
   install-deps-from:
     description: >

@@ -1,69 +1,12 @@
-/*
- * GNOME Palette: https://developer.gnome.org/hig/reference/palette.html
- */
-:root {
-  --blue1: rgb(153,193,241);
-  --blue2: rgb(98,160,234);
-  --blue3: rgb(53,132,228);
-  --blue4: rgb(28,113,216);
-  --blue5: rgb(26,95,180);
-  --green1: rgb(143,240,164);
-  --green2: rgb(87,227,137);
-  --green3: rgb(51,209,122);
-  --green4: rgb(46,194,126);
-  --green5: rgb(38,162,105);
-  --yellow1: rgb(249,240,107);
-  --yellow2: rgb(248,228,92);
-  --yellow3: rgb(246,211,45);
-  --yellow4: rgb(245,194,17);
-  --yellow5: rgb(229,165,10);
-  --orange1: rgb(255,190,111);
-  --orange2: rgb(255,163,72);
-  --orange3: rgb(255,120,0);
-  --orange4: rgb(230,97,0);
-  --orange5: rgb(198,70,0);
-  --red1: rgb(246,97,81);
-  --red2: rgb(237,51,59);
-  --red3: rgb(224,27,36);
-  --red4: rgb(192,28,40);
-  --red5: rgb(165,29,45);
-  --purple1: rgb(220,138,221);
-  --purple2: rgb(192,97,203);
-  --purple3: rgb(145,65,172);
-  --purple4: rgb(129,61,156);
-  --purple5: rgb(97,53,131);
-  --brown1: rgb(205,171,143);
-  --brown2: rgb(181,131,90);
-  --brown3: rgb(152,106,68);
-  --brown4: rgb(134,94,60);
-  --brown5: rgb(99,69,44);
-  --light1: rgb(255,255,255);
-  --light2: rgb(246,245,244);
-  --light3: rgb(222,221,218);
-  --light4: rgb(192,191,188);
-  --light5: rgb(154,153,150);
-  --dark1: rgb(119,118,123);
-  --dark2: rgb(94,92,100);
-  --dark3: rgb(61,56,70);
-  --dark4: rgb(36,31,49);
-  --dark5: rgb(0,0,0);
-  --text: #f6f5f4;
-}
+/* SPDX-License-Identifier: CC0-1.0 */
+/* SPDX-FileCopyrightText: No rights reserved */
+
+@import url(https://andyholmes.ca/assets/css/base.css);
+
 
 /*
  * General
  */
-* {
-  box-sizing: border-box;
-}
-
-html, body {
-  margin: 0;
-  padding: 0;
-  font-size: 16px;
-  font-family: "Cantarell", -apple-system, BlinkMacSystemFont, "Helvetica", sans-serif;
-}
-
 a {
   color: currentColor;
 }
@@ -74,15 +17,20 @@ a {
   max-width: 900px;
 }
 
-.disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  pointer-events: none;
-}
+/*
+ * Pill Button
+ */
+a.pill {
+  display: block;
+  transition: all 250ms ease-in-out;
 
-.disabled:focus,
-.disabled:hover {
-  background-color: revert;
+  font-weight: bold;
+  font-size: 1.125rem;
+  text-align: center;
+  text-decoration: none;
+
+  border-radius: 2em;
+  padding: 0.5em;
 }
 
 
@@ -90,6 +38,8 @@ a {
  * Header
  */
 header {
+  color: var(--light2);
+  background-color: var(--brown5);
   padding: 2rem 0;
   text-align: center;
 }
@@ -114,86 +64,60 @@ header h1 svg {
 
 
 /*
- * Description
+ * Sections
  */
-#description {
-  padding: 0 0 2rem;
-  text-align: center;
-}
-
-#description h2 {
-  font-size: 2.5rem;
-  font-weight: normal;
-  margin: 0 0 2rem;
-}
-
-#description p {
-  max-width: 30em;
-}
-
-
-/*
- * Downloads
- */
-#repository,
-#downloads {
+section {
   padding: 2rem 0;
   text-align: center;
 }
 
-#repository h2,
-#downloads h2 {
+section h2 {
   font-size: 1.75rem;
   font-weight: normal;
   margin: 0 0 2rem;
 }
 
-#repository ul,
-#downloads ul {
+section ul {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 1rem;
+  gap: 2rem;
   padding: 0;
 }
 
-#repository ul > li,
-#downloads ul > li {
+section ul > li {
   display: block;
-  padding: 1em;
+  margin: 0 auto;
 }
 
-#repository li >svg,
-#downloads li > svg {
+section li > svg {
   display: block;
   fill: currentColor;
   width: 96px;
   height: auto;
-  margin: 0 auto 1rem;
+  margin: 1rem auto;
 }
 
-#repository a,
-#downloads a {
-  display: block;
-  transition: all 250ms ease-in-out;
+p.content {
+  margin: 0 auto 2rem;
+  max-width: 30em;
+}
 
-  color: var(--dark5);
-  background-color: var(--light5);
 
+/*
+ * Description
+ */
+#description h2 {
+  font-size: 2.5rem;
+  font-weight: normal;
+}
+
+
+/*
+ * Downloads, Repository
+ */
+#repository h3,
+#downloads h3 {
   font-weight: bold;
-  font-size: 1.125rem;
-  text-align: center;
-  text-decoration: none;
-
-  border-radius: 2em;
-  padding: 0.5em;
-}
-
-#repository a:focus,
-#repository a:hover,
-#downloads a:focus,
-#downloads a:hover {
-  color: var(--dark5);
-  background-color: var(--light4);
 }
 
 
@@ -201,7 +125,7 @@ header h1 svg {
  * Footer
  */
 footer {
-  background-color: var(--dark4);
+  background-color: var(--brown5);
   color: white;
   padding: 2rem 0;
   font-size: 80%;
@@ -228,94 +152,74 @@ footer a:hover {
 
 
 /*
- * Dark/Light Theme
+ * Color Scheme
  */
-.scheme2 {
-  background-color: var(--dark2);
+.flatter-scheme {
+  background-color: var(--brown1);
+  color: var(--dark4);
+}
+
+#repository {
+  background-color: var(--brown4);
   color: var(--light2);
 }
 
-.scheme3 {
-  background-color: var(--dark3);
-  color: var(--light2);
+.flatter-scheme a.pill {
+  background-color: var(--yellow5);
+  color: var(--dark4);
+}
+.flatter-scheme a.pill:focus,
+.flatter-scheme a.pill:hover {
+  background-color: var(--yellow4);
+  color: var(--dark4);
 }
 
-.scheme4 {
-  background-color: var(--dark4);
-  color: var(--light3);
+#repository {
+background-color: var(--brown4);
+color: var(--light2);
 }
-
-.scheme5 {
-  background-color: var(--dark5);
-  color: var(--light3);
-}
-
 
 @media (prefers-color-scheme: dark) {
-  .scheme2 {
-    background-color: var(--dark2);
+  .flatter-scheme {
+    background-color: var(--brown4);
     color: var(--light2);
   }
-  .scheme3 {
-    background-color: var(--dark3);
-    color: var(--light2);
-  }
-  .scheme4 {
-    background-color: var(--dark4);
-    color: var(--light3);
-  }
-  .scheme5 {
-    background-color: var(--dark5);
+
+  #repository {
+    background-color: var(--brown5);
     color: var(--light3);
   }
 
-  #downloads a {
-    color: var(--dark5);
-    background-color: var(--light5);
+  .flatter-scheme a.pill {
+    background-color: var(--yellow5);
+    color: var(--dark4);
   }
-  #downloads a:focus,
-  #downloads a:hover {
-    color: var(--dark5);
-    background-color: var(--light4);
-  }
-
-  #resources ul > li:focus,
-  #resources ul > li:hover {
-    background-color: var(--dark2);
+  .flatter-scheme a.pill:focus,
+  .flatter-scheme a.pill:hover {
+    background-color: var(--yellow4);
+    color: var(--dark4);
   }
 }
 
 @media (prefers-color-scheme: light) {
-  .scheme2 {
-    background-color: var(--light2);
-    color: var(--dark3);
-  }
-  .scheme3 {
-    background-color: var(--light3);
-    color: var(--dark3);
-  }
-  .scheme4 {
-    background-color: var(--light4);
+  .flatter-scheme {
+    background-color: var(--brown1);
     color: var(--dark4);
   }
-  .scheme5 {
-    background-color: var(--light5);
-    color: var(--dark5);
+
+  #repository {
+    background-color: var(--brown4);
+    color: var(--light2);
   }
 
-  #downloads a {
-    color: var(--light3);
-    background-color: var(--dark3);
+  .flatter-scheme a.pill {
+    background-color: var(--yellow5);
+    color: var(--dark4);
   }
-  #downloads a:focus,
-  #downloads a:hover {
-    color: var(--light3);
-    background-color: var(--dark4);
-  }
-
-  #resources ul > li:focus,
-  #resources ul > li:hover {
-    background-color: var(--light2);
+  .flatter-scheme a.pill:focus,
+  .flatter-scheme a.pill:hover {
+    background-color: var(--yellow4);
+    color: var(--dark4);
   }
 }
 
