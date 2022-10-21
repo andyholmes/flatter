@@ -46,7 +46,7 @@ jobs:
           echo "flatter.andyholmes.ca" > CNAME
 
       - name: Build
-        uses: andyholmes/flatter@main
+        uses: andyholmes/flatter@staging
         with:
           files: |
             tests/manifests/ca.andyholmes.Flatter.yml
