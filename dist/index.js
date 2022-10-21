@@ -74366,28 +74366,27 @@ async function uploadPagesArtifact(directory) {
 async function generateFlatpakrepo(repoPath) {
     /* Collect the .flatpakrepo fields */
     const {repository} = github.context.payload;
-    const title = repository.name;
-    const description = repository.description;
-    const url = `https://${repository.owner.login}.github.io/${repository.name}`;
-    const homepage = repository.homepage || repository.html_url;
-    const icon = 'https://raw.githubusercontent.com/flatpak/flatpak/main/flatpak.png';
 
-    /* Generate a .flatpakrepo file */
-    let flatpakrepo =
-`[Flatpak Repo]
-Title=${title}
-Description=${description}
-Url=${url}
-Homepage=${homepage}
-Icon=${icon}`;
+    const metadata = {
+        Title: repository.name,
+        Description: repository.description,
+        Url: `https://${repository.owner.login}.github.io/${repository.name}`,
+        Homepage: repository.homepage || repository.html_url,
+        Icon: 'https://raw.githubusercontent.com/flatpak/flatpak/main/flatpak.png',
+    };
 
     /* Append the GPG Public Key */
     if (core.getInput('gpg-sign')) {
         const {stdout} = await exec.getExecOutput('gpg2',
             ['--armor', '--export', core.getInput('gpg-sign')]);
         const publicKey = stdout.split('\n').slice(2, -2).join('');
-        flatpakrepo = `${flatpakrepo}\nGPGKey=${publicKey}`;
+        metadata['GPGKey'] = publicKey;
     }
+
+    let flatpakrepo = '[Flatpak Repo]';
+
+    for (const [key, value] of Object.entries(metadata))
+        flatpakrepo = `${flatpakrepo}\n${key}=${value}`;
 
     await external_fs_.promises.writeFile(`${repoPath}/index.flatpakrepo`, flatpakrepo);
 }
