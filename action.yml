@@ -9,11 +9,6 @@ inputs:
     description: >
       A list of paths to Flatpak manifests.
     required: true
-  cache-key:
-    description: >
-      An optional cache key.
-    default: 'flatter'
-    required: false
   upload-flatpak-bundle:
     description: >
       Upload each application as a Flatpak artifact.
