@@ -92,7 +92,7 @@ async function parseManifest(manifestPath) {
 
         case '.yaml':
         case '.yml':
-            return yaml.safeLoad(data);
+            return yaml.load(data);
 
         default:
             throw TypeError('Unsupported manifest format');

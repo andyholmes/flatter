@@ -74103,7 +74103,7 @@ async function parseManifest(manifestPath) {
 
         case '.yaml':
         case '.yml':
-            return safeLoad(data);
+            return load(data);
 
         default:
             throw TypeError('Unsupported manifest format');
