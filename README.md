@@ -3,7 +3,20 @@
 Flatter is a GitHub Action for building and hosting a Flatpak repository in a
 static hosting environment, such as GitHub Pages.
 
-## Example
+## Table of Contents
+
+* [Complete Example](#complete-example)
+* [Inputs](#inputs)
+  * [Deployment Options](#deployment-options)
+  * [Advanced Options](#advanced-options)
+* [GPG Signing](#gpg-signing)
+* [Deployment](#deployment)
+  * [Flatpak Bundles](#flatpak-bundles)
+  * [GitHub Pages](#github-pages)
+  * [Custom Deploy](#custom-deploy)
+* [Multiple Architectures](#multiple-architectures)
+
+## Complete Example
 
 ```yml
 name: Flatter
@@ -22,9 +35,25 @@ jobs:
       image: ghcr.io/andyholmes/flatter/gnome:43
       options: --privileged
 
+    strategy:
+      matrix:
+        arch: [x86_64, aarch64]
+      fail-fast: false
+      # Only one job at a time can use the shared repository cache
+      max-parallel: 1
+
     steps:
+      # Checkout a repository with Flatpak manifests
       - name: Checkout
         uses: actions/checkout@v3
+
+      # See "Multiple Architectures"
+      - name: Setup QEMU
+        if: ${{ matrix.arch == 'aarch64' }}
+        id: qemu
+        uses: docker/setup-qemu-action@v2
+        with:
+          platforms: arm64
 
       # See "GPG Signing" below
       - name: Setup GPG
@@ -34,72 +63,106 @@ jobs:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
           passphrase: ${{ secrets.GPG_PASSPHRASE }}
 
+      # Generate a CNAME file on-the-fly for a configured host
+      - name: Generate CNAME
+        run: |
+          echo "flatter.andyholmes.ca" > CNAME
+
       - name: Build
-        uses: andyholmes/actions/flatter@main
+        uses: andyholmes/flatter@main
         with:
           files: |
-            com.example.App.json
+            build-aux/flatpak/com.example.App.json
+          arch: ${{ matrix.arch }}
           gpg-sign: ${{ steps.gpg.outputs.fingerprint }}
-          upload-pages-artifact: true
-          upload-flatpak-bundle: true
+          upload-bundles: true
+          upload-pages-artifact: ${{ matrix.arch == 'aarch64' }}
+          include-files: |
+            CNAME
+            default.css
+            index.html
+
+  # See "Github Pages" below
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    needs: flatter
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v1
 ```
 
 ## Inputs
 
 The only required input is `files`, which should be a list of paths to Flatpak
-manifests (JSON or YAML) to build. Typically one or both of
-`upload-pages-artifact` and `upload-flatpak-bundle` will be set to `true`,
-depending on the deployment style.
+manifests (JSON or YAML) to build.
 
 | Name                    | Default   | Description                            |
 |-------------------------|-----------|----------------------------------------|
-| `files` (REQUIRED)      | None      | A list of manifests to build           |
-| `upload-flatpak-bundle` | `false`   | Upload each application as a Flatpak   |
-| `upload-pages-artifact` | `false`   | Upload the repo for GitHub Pages       |
-| `flatpakrepo`           | `true`    | Generate `/index.flatpakrepo` file     |
-| `include-files`         | None      | Files to include in the repository     |
-| `cache-key`             | `flatter` | A cache key, or `''` to disable        |
-
-There are also inputs that correspond to command-line options for `flatpak` and
-`flatpak-builder`, most commonly used:
-
-| Name                    | Default   | Description                            |
-|-------------------------|-----------|----------------------------------------|
+| `files`                 | None      | A list of paths to Flatpak manifests   |
 | `arch`                  | `x86_64`  | The architecture to build for          |
 | `gpg-sign`              | None      | A GPG Key fingerprint                  |
-| `repo`                  | `repo`    | The repository directory               |
+| `repo`                  | `repo`    | The path to export the repository      |
+| `cache-key`             | `flatter` | A cache key, or `''` to disable        |
 
-See [`action.yml`](action.yml) for a full list of inputs.
+### Deployment Options
 
-### Advanced
+For more information, see [Deployment](#deployment).
+
+| Name                    | Default   | Description                            |
+|-------------------------|-----------|----------------------------------------|
+| `upload-bundles`        | `false`   | Upload a bundle for each application   |
+| `upload-pages-artifact` | `false`   | Upload the repo for GitHub Pages       |
+| `include-files`         | None      | Files to include in the repository     |
+
+
+### Advanced Options
 
 For advanced use cases, Flatter offers an input for each command-line program
 used.
 
-* `flatpak-builder-args`
+| Name                        | Description                                    |
+|-----------------------------|------------------------------------------------|
+| `flatpak-builder-args`      | Command-line options for `flatpak-builder`     |
+| `flatpak-build-bundle-args` | Upload the repo for GitHub Pages               |
 
-  Extra command line options for `flatpak-builder`. Flatter sets the following
-  flags internally:
+Flatter sets the following flags for `flatpak-builder` internally:
   
-  ```
-  --arch
-  --ccache
-  --disable-rofiles-fuse
-  --gpg-sign
-  --repo
-  --state-dir
-  ```
-
-* `flatpak-build-bundle-args`
-
-  Extra command line options for `flatpak build-bundle`. Flatter sets the
-  following flags internally:
+```sh
+--arch
+--ccache
+--disable-rofiles-fuse
+--gpg-sign
+--repo
+--state-dir
+```
   
-  ```
-  --arch
-  --gpg-sign
-  ```
+Flatter sets the following flags for `flatpak build-bundle` internally:
+  
+```sh
+--arch
+--gpg-sign
+```
 
+## Containers
+
+Flatter provides containers with pre-installed runtimes for several platforms,
+built from the base [`Dockerfile`](Dockerfile):
+
+| Name          | Versions (tags)                        | Architectures       |
+|---------------|----------------------------------------|---------------------|
+| `freedesktop` | `21.08`, `22.08`                       | `x86_64`, `aarch64` |
+| `gnome`       | `42`, `43`, `master`                   | `x86_64`, `aarch64` |
+| `kde`         | `5.15-21.08`, `5.15-22.08`             | `x86_64`, `aarch64` |
+| `elementary`  | `juno-20.08`                           | `x86_64`            |
 
 ## GPG Signing
 
@@ -159,24 +222,32 @@ jobs:
 
 [gpg-action]: https://github.com/crazy-max/ghaction-import-gpg
 
-## Deploying Flatter
+## Deployment
 
 Flatpak repositories generated by `flatpak-builder` are deployable as static
 assets, so deployment is quite flexible.
 
-Flatter will automatically generate a `index.flatpakrepo` file in the repository
-directory, unless the `flatpakrepo` input is set to `false`. Other simple files,
-like `index.html`, can be added with the `include-files` input.
+### Flatpak Bundles
+
+For each manifest built, Flatter can bundle and upload the application as a job
+artifact. The artifacts are consistently named in the form
+`<application-id>-<architecture>` (e.g. `com.example.App-x86_64`).
+
+Set the `upload-bundles` input to `true` and together with
+[nightly.link](https://nightly.link), you can get static links to the most
+recent Flatpak bundle built by Flatter.
 
 ### GitHub Pages
 
 Flatter can upload the repository as an artifact compatible with GitHub Pages,
-allowing the environment of a repository to become a Flatpak repository.
+making the pages for the GitHub repository a Flatpak Repository. Flutter will
+generate an `index.flatpakrepo` file in the repository directory and other files
+can be added with the `include-files` input (e.g.`index.html`).
 
 1. Set the `upload-pages-artifact` input to `true`
-2. In the **Settings** for the repository, select **Pages** in the sidebar and
-   set **Source** to "GitHub Pages"
-3. Add a job with [`actions/deploy-pages`][deploy-pages] to the Flatter workflow
+2. In the **Settings** for the GitHub repository, select **Pages** in the
+   sidebar and set **Source** to "GitHub Pages"
+3. Add a job with [`actions/deploy-pages`][deploy-pages] to the workflow
 
 ```yml
 name: Flatter (GitHub Pages)
@@ -198,11 +269,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-        
-      # Generate a CNAME file on-the-fly for a configured host
-      - name: Generate CNAME
-        run: |
-          echo "flutter.andyholmes.ca" > CNAME
 
       - name: Build
         uses: andyholmes/actions/flatter@main
@@ -211,9 +277,9 @@ jobs:
             build-aux/flatpak/com.example.App.json
           upload-pages-artifact: true
           include-files: |
-            CNAME
+            default.css
             index.html
-          
+
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
@@ -277,6 +343,65 @@ jobs:
 ```
 
 [deploy-custom]: https://github.com/JamesIves/github-pages-deploy-action
+
+## Multiple Architectures
+
+Flatter support building repositories with multiple architectures, such as
+`x86_64` for desktop and `aarch64` for mobile devices.
+
+Multiple architectures can be built in a [job matrix][gh-matrix] or by adding
+more jobs, but must not run concurrently if they share a repository directory.
+Either use [`max-parallel`][gh-max-parallel] with `matrix` or use a
+[`concurrency` group][gh-concurrency].
+
+```yml
+name: Flatter
+
+on:
+  # Rebuild once a day
+  schedule:
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+
+jobs:
+  flatter:
+    name: Flatter
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/andyholmes/flatter/gnome:43
+      options: --privileged
+
+    # A matrix can be used, but must set `max-parallel: 1`
+    strategy:
+      matrix:
+        arch: [x86_64, aarch64]
+      fail-fast: false
+      max-parallel: 1
+
+    steps:
+      # Checkout a repository with Flatpak manifests
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      # See "Multiple Architectures"
+      - name: Setup QEMU
+        if: ${{ matrix.arch == 'aarch64' }}
+        id: qemu
+        uses: docker/setup-qemu-action@v2
+        with:
+          platforms: arm64
+
+      - name: Build
+        uses: andyholmes/flatter@main
+        with:
+          files: |
+            build-aux/flatpak/com.example.App.json
+          arch: ${{ matrix.arch }}
+```
+
+[gh-concurrency]: https://docs.github.com/actions/using-workflows/workflow-syntax-for-github-actions#concurrency
+[gh-matrix]: https://docs.github.com/actions/using-jobs/using-a-matrix-for-your-jobs
+[gh-max-parallel]: https://docs.github.com/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstrategymax-parallel
 
 ## Acknowledgements
 
