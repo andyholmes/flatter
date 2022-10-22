@@ -71,6 +71,35 @@ There are also inputs that correspond to command-line options for `flatpak` and
 
 See [`action.yml`](action.yml) for a full list of inputs.
 
+### Advanced
+
+For advanced use cases, Flatter offers an input for each command-line program
+used.
+
+* `flatpak-builder-args`
+
+  Extra command line options for `flatpak-builder`. Flatter sets the following
+  flags internally:
+  
+  ```
+  --arch
+  --ccache
+  --disable-rofiles-fuse
+  --gpg-sign
+  --repo
+  --state-dir
+  ```
+
+* `flatpak-build-bundle-args`
+
+  Extra command line options for `flatpak build-bundle`. Flatter sets the
+  following flags internally:
+  
+  ```
+  --arch
+  --gpg-sign
+  ```
+
 
 ## GPG Signing
 
