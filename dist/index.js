@@ -70149,18 +70149,20 @@ __nccwpck_require__.d(__webpack_exports__, {
 
 // EXTERNAL MODULE: ./node_modules/@actions/artifact/lib/artifact-client.js
 var artifact_client = __nccwpck_require__(2605);
-// EXTERNAL MODULE: ./node_modules/@actions/cache/lib/cache.js
-var cache = __nccwpck_require__(7799);
 // EXTERNAL MODULE: ./node_modules/@actions/core/lib/core.js
 var core = __nccwpck_require__(2186);
-// EXTERNAL MODULE: ./node_modules/@actions/exec/lib/exec.js
-var exec = __nccwpck_require__(1514);
-// EXTERNAL MODULE: ./node_modules/@actions/github/lib/github.js
-var github = __nccwpck_require__(5438);
 // EXTERNAL MODULE: external "fs"
 var external_fs_ = __nccwpck_require__(7147);
 // EXTERNAL MODULE: external "path"
 var external_path_ = __nccwpck_require__(1017);
+// EXTERNAL MODULE: external "crypto"
+var external_crypto_ = __nccwpck_require__(6113);
+// EXTERNAL MODULE: ./node_modules/@actions/cache/lib/cache.js
+var cache = __nccwpck_require__(7799);
+// EXTERNAL MODULE: ./node_modules/@actions/exec/lib/exec.js
+var exec = __nccwpck_require__(1514);
+// EXTERNAL MODULE: ./node_modules/@actions/github/lib/github.js
+var github = __nccwpck_require__(5438);
 ;// CONCATENATED MODULE: ./node_modules/js-yaml/dist/js-yaml.mjs
 
 /*! js-yaml 4.1.0 https://github.com/nodeca/js-yaml @license MIT */
@@ -74014,7 +74016,55 @@ var jsYaml = {
 /* harmony default export */ const js_yaml = ((/* unused pure expression or super */ null && (jsYaml)));
 
 
-;// CONCATENATED MODULE: ./src/flatpak.js
+;// CONCATENATED MODULE: ./src/utils.js
+// SPDX-License-Identifier: GPL-3.0-or-later
+// SPDX-FileCopyrightText: 2022 Andy Holmes <andrew.g.r.holmes@gmail.com>
+
+
+
+
+
+
+
+
+/**
+ * Get an input as a list of strings.
+ *
+ * See: https://github.com/actions/toolkit/issues/184
+ *
+ * @param {string} name - An input name
+ * @returns {string[]} A list of strings
+ */
+function getStrvInput(name) {
+    return core.getInput(name)
+        .split("\n")
+        .filter(x => x !== '');
+}
+
+/**
+ * Upload a directory as a GitHub Pages Artifact.
+ *
+ * See: https://github.com/actions/upload-pages-artifact/blob/main/action.yml
+ *
+ * @param {PathLike} directory - A path to a directory
+ */
+async function uploadPagesArtifact(directory) {
+    await exec.exec('tar', [
+        '--dereference',
+        '--hard-dereference',
+        '--directory', directory,
+        '-cvf', 'artifact.tar',
+        '--exclude=.git',
+        '--exclude=.github',
+        '.',
+    ]);
+
+    const artifactClient = artifact_client/* create */.U();
+    await artifactClient.uploadArtifact('github-pages', ['artifact.tar'], '.');
+}
+
+
+;// CONCATENATED MODULE: ./src/flatter.js
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2022 Andy Holmes <andrew.g.r.holmes@gmail.com>
 
@@ -74028,58 +74078,20 @@ var jsYaml = {
 
 
 
-/*
- * Action Inputs
- *
- * Each array is a list of GitHub Action inputs that are automatically mapped to
- * command-line arguments, for the given Flatpak command.
- */
-const BUILDER_INPUTS = [
-    'arch',
-    'gpg-sign',
-    'install-deps-from',
-    'repo',
-];
-
-const BUILD_BUNDLE_INPUTS = [
-    'gpg-sign',
-];
 
 
-/**
- * Parse and coalesce arguments for a command-line program.
- *
- * This function takes lists of strings in the form of `--option` and
- * `--option=value` and eliminates duplicates; first parsing @actionInputs and
- * then applying @overrides.
- *
- * @param {string[]} [actionInputs] - Action inputs that map to CLI options
- * @param {string[]} [overrides] - A list of override arguments
- * @returns {string[]} A list of arguments
- */
-function parseArguments(actionInputs = [], overrides = []) {
-    /* Use a Map to coalesce options */
-    const options = new Map();
-    const pattern = /--([^=]+)(?:=([^\b]+))?/;
 
-    /* Map GitHub Action inputs to key-value pairs */
-    for (const input of actionInputs) {
-        const value = core.getInput(input);
-        value && options.set(input, value);
-    }
 
-    /* Parse overrides into key-value pairs */
-    for (const arg of overrides) {
-        const [, option, value] = pattern.exec(arg);
-        option && options.set(option, value);
-    }
 
-    const args = [];
 
-    for (const [option, value] of options)
-        args.push(value ? `--${option}=${value}` : `--${option}`);
-
-    return args;
+function checksumFile(filePath) {
+    return new Promise((resolve, reject) => {
+        const hash = external_crypto_.createHash('sha256');
+        const stream = external_fs_.createReadStream(filePath);
+        stream.on('error', error => reject(error));
+        stream.on('data', chunk => hash.update(chunk));
+        stream.on('end', () => resolve(hash.digest('hex')));
+    });
 }
 
 /**
@@ -74104,23 +74116,81 @@ async function parseManifest(manifestPath) {
 }
 
 /**
- * Build a Flatpak manifest.
+ * Generate a .flatpakrepo file and copy it to the repository directory.
  *
- * @param {PathLike} directory - A path to a build directory
- * @param {PathLike} manifest - A path to a manifest
- * @param {string[]} [args] - Command-line options for `flatpak-builder`
+ * @param {PathLike} repoPath - A path to a Flatpak repository
  * @returns {Promise<>} A promise for the operation
  */
-async function builder(directory, manifest, args = []) {
-    core.debug(`${directory}, ${manifest}, ${args}`);
+async function generateFlatpakrepo(repoPath) {
+    /* Collect the .flatpakrepo fields */
+    const {repository} = github.context.payload;
 
-    const builderArgs = parseArguments(BUILDER_INPUTS, args);
+    const metadata = {
+        Title: repository.name,
+        Description: repository.description,
+        Url: `https://${repository.owner.login}.github.io/${repository.name}`,
+        Homepage: repository.homepage || repository.html_url,
+        Icon: 'https://raw.githubusercontent.com/flatpak/flatpak/main/flatpak.png',
+    };
+
+    /* Append the GPG Public Key */
+    if (core.getInput('gpg-sign')) {
+        const {stdout} = await exec.getExecOutput('gpg2',
+            ['--armor', '--export', core.getInput('gpg-sign')]);
+        const publicKey = stdout.split('\n').slice(2, -2).join('');
+        metadata['GPGKey'] = publicKey;
+    }
+
+    let flatpakrepo = '[Flatpak Repo]';
+
+    for (const [key, value] of Object.entries(metadata))
+        flatpakrepo = `${flatpakrepo}\n${key}=${value}`;
+
+    await external_fs_.promises.writeFile(`${repoPath}/index.flatpakrepo`, flatpakrepo);
+}
+
+
+/**
+ * Build a Flatpak for the repository.
+ *
+ * A single repository cache is kept for all builds, while each architecture has
+ * its own cache. This keeps the benefits of caching, while being able to serve
+ * multiple architectures from the same repository.
+ *
+ * @param {PathLike} repo - A path to a Flatpak repository
+ * @param {PathLike} manifest - A path to a Flatpak manifest
+ */
+async function buildApplication(repo, manifest) {
+    const arch = core.getInput('arch');
+    const checksum = await checksumFile(manifest);
+    const stateDir = `.flatpak-builder-${arch}-${checksum}`;
+
+    let cacheId, cacheKey;
+    if ((cacheKey = core.getInput('cache-key')) && cache.isFeatureAvailable()) {
+        cacheKey = `${cacheKey}-${arch}-${checksum}`;
+        cacheId = await cache.restoreCache([stateDir], cacheKey);
+    }
+
+    const builderArgs = [
+        `--arch=${core.getInput('arch')}`,
+        '--ccache',
+        '--disable-rofiles-fuse',
+        `--repo=${repo}`,
+        `--state-dir=${stateDir}`,
+        ...(getStrvInput('flatpak-builder-args')),
+    ];
+
+    if (core.getInput('gpg-sign'))
+        builderArgs.push(`--gpg-sign=${core.getInput('gpg-sign')}`);
 
     await exec.exec('flatpak-builder', [
         ...builderArgs,
-        directory,
+        '_build',
         manifest,
     ]);
+
+    if (cacheId && cacheId !== cacheKey)
+        await cache.saveCache([stateDir], cacheKey);
 }
 
 /**
@@ -74128,77 +74198,53 @@ async function builder(directory, manifest, args = []) {
  *
  * See: `flatpak build-bundle --help`.
  *
- * @param {PathLike} location - A path to a Flatpak repository
+ * @param {PathLike} repo - A path to a Flatpak repository
  * @param {PathLike} fileName - A filename
  * @param {string} name - An application ID
  * @param {string} [branch] - The Flatpak branch (default: master)
  * @param {string[]} [args] - Extra options for `flatpak build-bundle`
  * @returns {Promise<>} A promise for the operation
  */
-async function buildBundle(location, fileName, name, branch = 'master', args = []) {
-    core.debug(`${location}, ${fileName}, ${name}, ${branch}, ${args}`);
+function buildBundle(repo, fileName, name, branch = 'master') {
+    core.debug(`${repo}, ${fileName}, ${name}, ${branch}`);
 
-    const bundleArgs = parseArguments(BUILD_BUNDLE_INPUTS, args);
+    const bundleArgs = [
+        `--arch=${core.getInput('arch')}`,
+        ...(getStrvInput('flatpak-build-bundle-args')),
+    ];
 
-    await exec.exec('flatpak', [
+    if (core.getInput('gpg-sign'))
+        bundleArgs.push(`--gpg-sign=${core.getInput('gpg-sign')}`);
+
+    return exec.exec('flatpak', [
         'build-bundle',
         ...bundleArgs,
-        location,
+        repo,
         fileName,
         name,
         branch,
     ]);
 }
 
-
-// EXTERNAL MODULE: external "crypto"
-var external_crypto_ = __nccwpck_require__(6113);
-;// CONCATENATED MODULE: ./src/utils.js
-// SPDX-License-Identifier: GPL-3.0-or-later
-// SPDX-FileCopyrightText: 2022 Andy Holmes <andrew.g.r.holmes@gmail.com>
-
-
-
-
-
-
-
-
-
-
-
-
 /**
- * Checksum a file.
+ * Create a single-file bundle from a local repository.
  *
- * See: https://stackoverflow.com/a/44643479/1108697
+ * This function is a convenience for extracting the application ID and default
+ * branch from @manifest, before calling `buildBundle)()`.
  *
- * @param {PathLike} filePath - A path to a file
- * @param {string} [checksumType] - A checksum type (default: sha256)
- * @returns {string} A hex digest
+ * @param {PathLike} repo - A path to a Flatpak repository
+ * @param {PathLike} manifest - A path to a Flatpak manifest
+ * @returns {Promise<>} A promise for the operation
  */
-function checksumFile(filePath, checksumType = 'sha256') {
-    return new Promise((resolve, reject) => {
-        const hash = external_crypto_.createHash(checksumType);
-        const stream = external_fs_.createReadStream(filePath);
-        stream.on('error', error => reject(error));
-        stream.on('data', chunk => hash.update(chunk));
-        stream.on('end', () => resolve(hash.digest('hex')));
-    });
-}
+async function buildBundleManifest(repo, manifest) {
+    const metadata = await parseManifest(manifest);
+    const appId = metadata['app-id'] || metadata['id'];
+    const branch = metadata['branch'] || metadata['default-branch'] || 'master';
+    const fileName = `${appId}.flatpak`;
 
-/**
- * Get an input as a list of strings.
- *
- * See: https://github.com/actions/toolkit/issues/184
- *
- * @param {string} name - An input name
- * @returns {string[]} A list of strings
- */
-function getStrvInput(name) {
-    return core.getInput(name)
-        .split("\n")
-        .filter(x => x !== '');
+    await buildBundle(repo, fileName, appId, branch);
+
+    return fileName;
 }
 
 /**
@@ -74271,28 +74317,6 @@ async function saveRepository() {
     core.endGroup();
 }
 
-/**
- * Upload a directory as a GitHub Pages Artifact.
- *
- * See: https://github.com/actions/upload-pages-artifact/blob/main/action.yml
- *
- * @param {PathLike} directory - A path to a directory
- */
-async function uploadPagesArtifact(directory) {
-    await exec.exec('tar', [
-        '--dereference',
-        '--hard-dereference',
-        '--directory', directory,
-        '-cvf', 'artifact.tar',
-        '--exclude=.git',
-        '--exclude=.github',
-        '.',
-    ]);
-
-    const artifactClient = artifact_client/* create */.U();
-    await artifactClient.uploadArtifact('github-pages', ['artifact.tar'], '.');
-}
-
 
 ;// CONCATENATED MODULE: ./src/main.js
 // SPDX-License-Identifier: GPL-3.0-or-later
@@ -74308,111 +74332,14 @@ async function uploadPagesArtifact(directory) {
 
 
 
-
-
-
-/**
- * Generate a .flatpakrepo file and copy it to the repository directory.
- *
- * @param {PathLike} repoPath - A path to a Flatpak repository
- * @returns {Promise<>} A promise for the operation
- */
-async function generateFlatpakrepo(repoPath) {
-    /* Collect the .flatpakrepo fields */
-    const {repository} = github.context.payload;
-
-    const metadata = {
-        Title: repository.name,
-        Description: repository.description,
-        Url: `https://${repository.owner.login}.github.io/${repository.name}`,
-        Homepage: repository.homepage || repository.html_url,
-        Icon: 'https://raw.githubusercontent.com/flatpak/flatpak/main/flatpak.png',
-    };
-
-    /* Append the GPG Public Key */
-    if (core.getInput('gpg-sign')) {
-        const {stdout} = await exec.getExecOutput('gpg2',
-            ['--armor', '--export', core.getInput('gpg-sign')]);
-        const publicKey = stdout.split('\n').slice(2, -2).join('');
-        metadata['GPGKey'] = publicKey;
-    }
-
-    let flatpakrepo = '[Flatpak Repo]';
-
-    for (const [key, value] of Object.entries(metadata))
-        flatpakrepo = `${flatpakrepo}\n${key}=${value}`;
-
-    await external_fs_.promises.writeFile(`${repoPath}/index.flatpakrepo`, flatpakrepo);
-}
-
-/**
- * Include files the repository directory.
- *
- * @param {PathLike} repoPath - A path to a Flatpak repository
- * @returns {Promise<>} A promise for the operation
- */
-async function includeFiles(repoPath) {
+async function includeFiles(repo) {
     const files = getStrvInput('include-files');
     const operations = files.map(src => {
-        const dest = external_path_.join(repoPath, external_path_.basename(src));
+        const dest = external_path_.join(repo, external_path_.basename(src));
         return external_fs_.promises.copyFile(src, dest);
     });
 
     return Promise.allSettled(operations);
-}
-
-/**
- * Build and upload a Flatpak bundle.
- *
- * @param {PathLike} repo - A path to a Flatpak repository
- * @param {PathLike} manifest - A path to a Flatpak manifest
- * @returns {Promise<>} A promise for the operation
- */
-async function uploadBundleArtifact(repo, manifest) {
-    const metadata = await parseManifest(manifest);
-    const appId = metadata['app-id'] || metadata['id'];
-    const branch = metadata['branch'] || metadata['default-branch'] || 'master';
-    const fileName = `${appId}.flatpak`;
-
-    await buildBundle(repo, fileName, appId, branch);
-
-    const artifactName = `${appId}-${core.getInput('arch')}`;
-    const artifactClient = artifact_client/* create */.U();
-    return artifactClient.uploadArtifact(artifactName, [fileName], '.', {
-        continueOnError: false,
-    });
-}
-
-/**
- * Build a Flatpak for the repository.
- *
- * A single repository cache is kept for all builds, while each architecture has
- * its own cache. This keeps the benefits of caching, while being able to serve
- * multiple architectures from the same repository.
- *
- * @param {PathLike} manifest - A path to a Flatpak manifest
- */
-async function buildManifest(manifest) {
-    const arch = core.getInput('arch');
-    const checksum = await checksumFile(manifest);
-    const stateDir = `.flatpak-builder-${arch}-${checksum}`;
-
-    let cacheId, cacheKey;
-    if ((cacheKey = core.getInput('cache-key')) && cache.isFeatureAvailable()) {
-        cacheKey = `${cacheKey}-${arch}-${checksum}`;
-        cacheId = await cache.restoreCache([stateDir], cacheKey);
-    }
-
-    await builder('_build', manifest, [
-        '--ccache',
-        '--disable-rofiles-fuse',
-        '--force-clean',
-        `--state-dir=${stateDir}`,
-    ]);
-
-    if (cacheId && cacheId !== cacheKey) {
-        await cache.saveCache([stateDir], cacheKey);
-    }
 }
 
 /**
@@ -74431,7 +74358,7 @@ async function run() {
         core.startGroup(`Building "${manifest}"...`);
 
         try {
-            await buildManifest(manifest);
+            await buildApplication(repo, manifest);
         } catch (e) {
             core.warning(`Failed to build "${manifest}": ${e.message}`);
         }
@@ -74451,18 +74378,6 @@ async function run() {
         core.endGroup();
     }
 
-    if (core.getInput('include-files')) {
-        core.startGroup('Copying extra files...');
-
-        try {
-            await includeFiles(repo);
-        } catch (e) {
-            core.warning(`Failed to copy extra files: ${e.message}`);
-        }
-
-        core.endGroup();
-    }
-
     await saveRepository();
 
     /*
@@ -74471,6 +74386,16 @@ async function run() {
     if (core.getBooleanInput('upload-pages-artifact')) {
         core.startGroup('Uploading GitHub Pages artifact...');
 
+        // Copy extra files to the repository directory
+        if (core.getInput('include-files')) {
+            try {
+                await includeFiles(repo);
+            } catch (e) {
+                core.warning(`Failed to copy extra files: ${e.message}`);
+            }
+        }
+
+        // Upload the repository directory as a Github Pages artifact
         try {
             await uploadPagesArtifact(repo);
         } catch (e) {
@@ -74486,11 +74411,19 @@ async function run() {
     if (core.getBooleanInput('upload-flatpak-bundle')) {
         core.startGroup('Uploading Flatpak bundles...');
 
+        const artifactClient = artifact_client/* create */.U();
+
         for (const manifest of manifests) {
             try {
-                await uploadBundleArtifact(repo, manifest);
+                const fileName = await buildBundleManifest(repo,
+                    manifest);
+                const artifactName = fileName.replace('.flatpak',
+                    core.getInput('arch'));
+
+                await artifactClient.uploadArtifact(artifactName, [fileName],
+                    '.', { continueOnError: false });
             } catch (e) {
-                core.warning(`Failed to upload "${manifest}": ${e.message}`);
+                core.warning(`Failed to bundle "${manifest}": ${e.message}`);
             }
         }
 
