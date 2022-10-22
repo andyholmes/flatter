@@ -53,7 +53,7 @@ jobs:
             tests/manifests/name.ptomato.Bloatpad.json
           arch: ${{ matrix.arch }}
           gpg-sign: ${{ steps.gpg.outputs.fingerprint }}
-          upload-flatpak-bundle: true
+          upload-bundles: true
           upload-pages-artifact: ${{ matrix.arch == 'aarch64' }}
           include-files: |
             tests/index.html

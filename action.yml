@@ -12,7 +12,7 @@ inputs:
     description: >
       A list of paths to Flatpak manifests.
     required: true
-  upload-flatpak-bundle:
+  upload-bundles:
     description: >
       Upload each application as a Flatpak artifact.
     default: false
@@ -21,11 +21,6 @@ inputs:
     description: >
       Upload the repository as a GitHub Pages artifact.
     default: false
-    required: false
-  flatpakrepo:
-    description: >
-      Include a generated .flatpakrepo file in the repository.
-    default: true
     required: false
   include-files:
     description: >
