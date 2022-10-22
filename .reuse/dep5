@@ -1,0 +1,10 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+
+Files: .eslintrc.json .github .gitignore tests README.md
+Copyright: No rights reserved
+License: CC0-1.0
+
+Files: dist package.json
+Copyright: 2022 Andy Holmes <andrew.g.r.holmes@gmail.com>
+License: GPL-3.0-or-later
+
