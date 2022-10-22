@@ -12,8 +12,6 @@ export  {
     parseManifest,
     builder,
     buildBundle,
-    buildSign,
-    buildUpdateRepo,
 };
 
 
@@ -31,14 +29,6 @@ const BUILDER_INPUTS = [
 ];
 
 const BUILD_BUNDLE_INPUTS = [
-    'gpg-sign',
-];
-
-const BUILD_SIGN_INPUTS = [
-    'gpg-sign',
-];
-
-const BUILD_UPDATE_REPO_INPUTS = [
     'gpg-sign',
 ];
 
@@ -144,45 +134,6 @@ async function buildBundle(location, fileName, name, branch = 'master', args = [
         fileName,
         name,
         branch,
-    ]);
-}
-
-/**
- * Sign a Flatpak repository.
- *
- * @param {PathLike} locateion - A path to a Flatpak repository
- * @param {string[]} [args] - Command-line options for `flatpak build-sign`
- * @returns {Promise<>} A promise for the operation
- */
-async function buildSign(location, args = []) {
-    core.debug(`${location}, ${args}`);
-
-    const signArgs = parseArguments(BUILD_SIGN_INPUTS, args);
-
-    await exec.exec('flatpak', [
-        'build-sign',
-        ...signArgs,
-        location,
-    ]);
-}
-
-
-/**
- * Update repository metadata.
- *
- * @param {PathLike} locateion - A path to a Flatpak repository
- * @param {string[]} [args] - Command-line options for `flatpak build-sign`
- * @returns {Promise<>} A promise for the operation
- */
-async function buildUpdateRepo(location, args = ['--prune']) {
-    core.debug(`${location}, ${args}`);
-
-    const signArgs = parseArguments(BUILD_UPDATE_REPO_INPUTS, args);
-
-    await exec.exec('flatpak', [
-        'build-update-repo',
-        ...signArgs,
-        location,
     ]);
 }
 

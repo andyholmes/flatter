@@ -74045,14 +74045,6 @@ const BUILD_BUNDLE_INPUTS = [
     'gpg-sign',
 ];
 
-const BUILD_SIGN_INPUTS = [
-    'gpg-sign',
-];
-
-const BUILD_UPDATE_REPO_INPUTS = [
-    'gpg-sign',
-];
-
 
 /**
  * Parse and coalesce arguments for a command-line program.
@@ -74155,45 +74147,6 @@ async function buildBundle(location, fileName, name, branch = 'master', args = [
         fileName,
         name,
         branch,
-    ]);
-}
-
-/**
- * Sign a Flatpak repository.
- *
- * @param {PathLike} locateion - A path to a Flatpak repository
- * @param {string[]} [args] - Command-line options for `flatpak build-sign`
- * @returns {Promise<>} A promise for the operation
- */
-async function buildSign(location, args = []) {
-    core.debug(`${location}, ${args}`);
-
-    const signArgs = parseArguments(BUILD_SIGN_INPUTS, args);
-
-    await exec.exec('flatpak', [
-        'build-sign',
-        ...signArgs,
-        location,
-    ]);
-}
-
-
-/**
- * Update repository metadata.
- *
- * @param {PathLike} locateion - A path to a Flatpak repository
- * @param {string[]} [args] - Command-line options for `flatpak build-sign`
- * @returns {Promise<>} A promise for the operation
- */
-async function buildUpdateRepo(location, args = ['--prune']) {
-    core.debug(`${location}, ${args}`);
-
-    const signArgs = parseArguments(BUILD_UPDATE_REPO_INPUTS, args);
-
-    await exec.exec('flatpak', [
-        'build-update-repo',
-        ...signArgs,
-        location,
     ]);
 }
 
@@ -74482,15 +74435,6 @@ async function run() {
         } catch (e) {
             core.warning(`Failed to build "${manifest}": ${e.message}`);
         }
-
-        core.endGroup();
-    }
-
-    if (core.getInput('gpg-sign')) {
-        core.startGroup('Signing Flatpak repository...');
-
-        await buildSign(repo);
-        await buildUpdateRepo(repo);
 
         core.endGroup();
     }
