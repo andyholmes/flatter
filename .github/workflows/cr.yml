@@ -35,7 +35,7 @@ jobs:
 
           - name: gnome
             tag: 43
-            packages: org.gnome.Platform//43 org.gnome.Sdk//43
+            packages: org.gnome.Platform/x86_64/43 org.gnome.Sdk/x86_64/43 org.gnome.Platform/aarch64/43 org.gnome.Sdk/aarch64/43
             remote: flathub
 
           - name: kde
