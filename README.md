@@ -9,6 +9,7 @@ static hosting environment, such as GitHub Pages.
 * [Inputs](#inputs)
   * [Deployment Options](#deployment-options)
   * [Advanced Options](#advanced-options)
+* [Containers](#containers)
 * [GPG Signing](#gpg-signing)
 * [Deployment](#deployment)
   * [Flatpak Bundles](#flatpak-bundles)
@@ -140,6 +141,7 @@ Flatter sets the following flags for `flatpak-builder` internally:
 --arch
 --ccache
 --disable-rofiles-fuse
+--force-clean
 --gpg-sign
 --repo
 --state-dir
@@ -157,12 +159,33 @@ Flatter sets the following flags for `flatpak build-bundle` internally:
 Flatter provides containers with pre-installed runtimes for several platforms,
 built from the base [`Dockerfile`](Dockerfile):
 
-| Name          | Versions (tags)                        | Architectures       |
+| Image Name    | Version Tags                           | Architectures       |
 |---------------|----------------------------------------|---------------------|
 | `freedesktop` | `21.08`, `22.08`                       | `x86_64`, `aarch64` |
 | `gnome`       | `42`, `43`, `master`                   | `x86_64`, `aarch64` |
 | `kde`         | `5.15-21.08`, `5.15-22.08`             | `x86_64`, `aarch64` |
 | `elementary`  | `juno-20.08`                           | `x86_64`            |
+
+Containers are referenced in the form `ghcr.io/andyholmes/flatter/<image>:<tag>`,
+such as `ghcr.io/andyholmes/flatter/gnome:43`:
+
+```yml
+name: Flatter
+
+on:
+  # Rebuild once a day
+  schedule:
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+
+jobs:
+  flatter:
+    name: Flatter
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/andyholmes/flatter/gnome:43
+      options: --privileged
+```
 
 ## GPG Signing
 
