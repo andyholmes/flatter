@@ -74395,7 +74395,7 @@ async function run() {
                 const fileName = await bundleApplication(repo,
                     manifest);
                 const artifactName = fileName.replace('.flatpak',
-                    core.getInput('arch'));
+                    `-${core.getInput('arch')}`);
 
                 await artifactClient.uploadArtifact(artifactName, [fileName],
                     '.', { continueOnError: false });
