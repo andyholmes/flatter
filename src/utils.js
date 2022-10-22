@@ -17,11 +17,12 @@ export {
  * See: https://github.com/actions/toolkit/issues/184
  *
  * @param {string} name - An input name
+ * @param {core.InputOptions} [options] - Input options
  * @returns {string[]} A list of strings
  */
-function getStrvInput(name) {
+function getStrvInput(name, options = {}) {
     return core
-        .getInput(name)
+        .getInput(name, options)
         .split("\n")
         .filter(x => x !== '');
 }

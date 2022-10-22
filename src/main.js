@@ -45,18 +45,6 @@ async function run() {
         core.endGroup();
     }
 
-    if (core.getBooleanInput('flatpakrepo')) {
-        core.startGroup('Generating .flatpakrepo...');
-
-        try {
-            await flatter.generateFlatpakrepo(repo);
-        } catch (e) {
-            core.warning(`Failed to generate .flatpakrepo: ${e.message}`);
-        }
-
-        core.endGroup();
-    }
-
     await flatter.saveRepository();
 
     /*
@@ -65,13 +53,18 @@ async function run() {
     if (core.getBooleanInput('upload-pages-artifact')) {
         core.startGroup('Uploading GitHub Pages artifact...');
 
+        // Generate a .flatpakrepo file
+        try {
+            await flatter.generateFlatpakrepo(repo);
+        } catch (e) {
+            core.warning(`Failed to generate .flatpakrepo: ${e.message}`);
+        }
+
         // Copy extra files to the repository directory
-        if (core.getInput('include-files')) {
-            try {
-                await includeFiles(repo);
-            } catch (e) {
-                core.warning(`Failed to copy extra files: ${e.message}`);
-            }
+        try {
+            await includeFiles(repo);
+        } catch (e) {
+            core.warning(`Failed to copy extra files: ${e.message}`);
         }
 
         // Upload the repository directory as a Github Pages artifact
@@ -87,14 +80,14 @@ async function run() {
     /*
      * Flatpak Bundles
      */
-    if (core.getBooleanInput('upload-flatpak-bundle')) {
+    if (core.getBooleanInput('upload-bundles')) {
         core.startGroup('Uploading Flatpak bundles...');
 
         const artifactClient = artifact.create();
 
         for (const manifest of manifests) {
             try {
-                const fileName = await flatter.buildBundleManifest(repo,
+                const fileName = await flatter.bundleApplication(repo,
                     manifest);
                 const artifactName = fileName.replace('.flatpak',
                     core.getInput('arch'));

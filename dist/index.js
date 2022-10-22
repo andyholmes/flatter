@@ -74033,10 +74033,11 @@ var jsYaml = {
  * See: https://github.com/actions/toolkit/issues/184
  *
  * @param {string} name - An input name
+ * @param {core.InputOptions} [options] - Input options
  * @returns {string[]} A list of strings
  */
-function getStrvInput(name) {
-    return core.getInput(name)
+function getStrvInput(name, options = {}) {
+    return core.getInput(name, options)
         .split("\n")
         .filter(x => x !== '');
 }
@@ -74118,10 +74119,10 @@ async function parseManifest(manifestPath) {
 /**
  * Generate a .flatpakrepo file and copy it to the repository directory.
  *
- * @param {PathLike} repoPath - A path to a Flatpak repository
+ * @param {PathLike} directory - A path to a Flatpak repository
  * @returns {Promise<>} A promise for the operation
  */
-async function generateFlatpakrepo(repoPath) {
+async function generateFlatpakrepo(directory) {
     /* Collect the .flatpakrepo fields */
     const {repository} = github.context.payload;
 
@@ -74146,7 +74147,7 @@ async function generateFlatpakrepo(repoPath) {
     for (const [key, value] of Object.entries(metadata))
         flatpakrepo = `${flatpakrepo}\n${key}=${value}`;
 
-    await external_fs_.promises.writeFile(`${repoPath}/index.flatpakrepo`, flatpakrepo);
+    await external_fs_.promises.writeFile(`${directory}/index.flatpakrepo`, flatpakrepo);
 }
 
 
@@ -74157,10 +74158,10 @@ async function generateFlatpakrepo(repoPath) {
  * its own cache. This keeps the benefits of caching, while being able to serve
  * multiple architectures from the same repository.
  *
- * @param {PathLike} repo - A path to a Flatpak repository
+ * @param {PathLike} directory - A path to a Flatpak repository
  * @param {PathLike} manifest - A path to a Flatpak manifest
  */
-async function buildApplication(repo, manifest) {
+async function buildApplication(directory, manifest) {
     const arch = core.getInput('arch');
     const checksum = await checksumFile(manifest);
     const stateDir = `.flatpak-builder-${arch}-${checksum}`;
@@ -74175,7 +74176,8 @@ async function buildApplication(repo, manifest) {
         `--arch=${core.getInput('arch')}`,
         '--ccache',
         '--disable-rofiles-fuse',
-        `--repo=${repo}`,
+        '--force-clean',
+        `--repo=${directory}`,
         `--state-dir=${stateDir}`,
         ...(getStrvInput('flatpak-builder-args')),
     ];
@@ -74196,17 +74198,18 @@ async function buildApplication(repo, manifest) {
 /**
  * Create a single-file bundle from a local repository.
  *
- * See: `flatpak build-bundle --help`.
+ * This function is a convenience for extracting the application ID and default
+ * branch from @manifest, before calling `buildBundle)()`.
  *
- * @param {PathLike} repo - A path to a Flatpak repository
- * @param {PathLike} fileName - A filename
- * @param {string} name - An application ID
- * @param {string} [branch] - The Flatpak branch (default: master)
- * @param {string[]} [args] - Extra options for `flatpak build-bundle`
+ * @param {PathLike} directory - A path to a Flatpak repository
+ * @param {PathLike} manifest - A path to a Flatpak manifest
  * @returns {Promise<>} A promise for the operation
  */
-function buildBundle(repo, fileName, name, branch = 'master') {
-    core.debug(`${repo}, ${fileName}, ${name}, ${branch}`);
+async function bundleApplication(directory, manifest) {
+    const metadata = await parseManifest(manifest);
+    const appId = metadata['app-id'] || metadata['id'];
+    const branch = metadata['branch'] || metadata['default-branch'] || 'master';
+    const fileName = `${appId}.flatpak`;
 
     const bundleArgs = [
         `--arch=${core.getInput('arch')}`,
@@ -74216,33 +74219,14 @@ function buildBundle(repo, fileName, name, branch = 'master') {
     if (core.getInput('gpg-sign'))
         bundleArgs.push(`--gpg-sign=${core.getInput('gpg-sign')}`);
 
-    return exec.exec('flatpak', [
+    await exec.exec('flatpak', [
         'build-bundle',
         ...bundleArgs,
-        repo,
+        directory,
         fileName,
-        name,
+        appId,
         branch,
     ]);
-}
-
-/**
- * Create a single-file bundle from a local repository.
- *
- * This function is a convenience for extracting the application ID and default
- * branch from @manifest, before calling `buildBundle)()`.
- *
- * @param {PathLike} repo - A path to a Flatpak repository
- * @param {PathLike} manifest - A path to a Flatpak manifest
- * @returns {Promise<>} A promise for the operation
- */
-async function buildBundleManifest(repo, manifest) {
-    const metadata = await parseManifest(manifest);
-    const appId = metadata['app-id'] || metadata['id'];
-    const branch = metadata['branch'] || metadata['default-branch'] || 'master';
-    const fileName = `${appId}.flatpak`;
-
-    await buildBundle(repo, fileName, appId, branch);
 
     return fileName;
 }
@@ -74366,18 +74350,6 @@ async function run() {
         core.endGroup();
     }
 
-    if (core.getBooleanInput('flatpakrepo')) {
-        core.startGroup('Generating .flatpakrepo...');
-
-        try {
-            await generateFlatpakrepo(repo);
-        } catch (e) {
-            core.warning(`Failed to generate .flatpakrepo: ${e.message}`);
-        }
-
-        core.endGroup();
-    }
-
     await saveRepository();
 
     /*
@@ -74386,13 +74358,18 @@ async function run() {
     if (core.getBooleanInput('upload-pages-artifact')) {
         core.startGroup('Uploading GitHub Pages artifact...');
 
+        // Generate a .flatpakrepo file
+        try {
+            await generateFlatpakrepo(repo);
+        } catch (e) {
+            core.warning(`Failed to generate .flatpakrepo: ${e.message}`);
+        }
+
         // Copy extra files to the repository directory
-        if (core.getInput('include-files')) {
-            try {
-                await includeFiles(repo);
-            } catch (e) {
-                core.warning(`Failed to copy extra files: ${e.message}`);
-            }
+        try {
+            await includeFiles(repo);
+        } catch (e) {
+            core.warning(`Failed to copy extra files: ${e.message}`);
         }
 
         // Upload the repository directory as a Github Pages artifact
@@ -74408,14 +74385,14 @@ async function run() {
     /*
      * Flatpak Bundles
      */
-    if (core.getBooleanInput('upload-flatpak-bundle')) {
+    if (core.getBooleanInput('upload-bundles')) {
         core.startGroup('Uploading Flatpak bundles...');
 
         const artifactClient = artifact_client/* create */.U();
 
         for (const manifest of manifests) {
             try {
-                const fileName = await buildBundleManifest(repo,
+                const fileName = await bundleApplication(repo,
                     manifest);
                 const artifactName = fileName.replace('.flatpak',
                     core.getInput('arch'));
