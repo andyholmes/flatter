@@ -142,15 +142,6 @@ async function run() {
         core.endGroup();
     }
 
-    if (core.getInput('gpg-sign')) {
-        core.startGroup('Signing Flatpak repository...');
-
-        await flatpak.buildSign(repo);
-        await flatpak.buildUpdateRepo(repo);
-
-        core.endGroup();
-    }
-
     if (core.getBooleanInput('flatpakrepo')) {
         core.startGroup('Generating .flatpakrepo...');
 
