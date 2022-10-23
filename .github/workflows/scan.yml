@@ -20,8 +20,7 @@ jobs:
       - name: Spell Check
         uses: codespell-project/actions-codespell@master
         with:
-          ignore_words_list: doubleclick,inout,onlyonce,sav
-          skip: ./dist
+          skip: .git,dist
 
   codeql:
     name: CodeQL
@@ -93,6 +92,7 @@ jobs:
           wait-for-processing: true
 
   dependency-review:
+    if: ${{ github.event_name == 'pull_request' }}
     name: Dependency Review
     runs-on: ubuntu-latest
 
