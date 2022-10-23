@@ -74170,6 +74170,9 @@ async function buildApplication(directory, manifest) {
     if ((cacheKey = core.getInput('cache-key')) && cache.isFeatureAvailable()) {
         cacheKey = `${cacheKey}-${arch}-${checksum}`;
         cacheId = await cache.restoreCache([stateDir], cacheKey);
+
+        if (cacheId)
+            core.info(`Cache "${cacheId}" restored with key "${cacheKey}"`);
     }
 
     const builderArgs = [
@@ -74191,7 +74194,7 @@ async function buildApplication(directory, manifest) {
         manifest,
     ]);
 
-    if (cacheId && cacheId !== cacheKey)
+    if (!cacheId?.localeCompare(cacheKey, undefined, { sensitivity: 'accent' }))
         await cache.saveCache([stateDir], cacheKey);
 }
 
