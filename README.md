@@ -3,6 +3,15 @@
 Flatter is a GitHub Action for building and hosting a Flatpak repository in a
 static hosting environment, such as GitHub Pages.
 
+The action uses `flatpak` and `flatpak-builder` to build, sign and export
+Flatpak applications as a repository and bundles. It includes built-in caching
+to speed up builds and support an incrementally updated repository.
+
+This action is ideal for low-traffic use cases, such as a nightly or development
+build repository for a small project. For high-traffic use cases, see
+[Flathub](https://github.com/flathub/flathub/wiki/App-Submission) instead, which
+also has a beta channel.
+
 ## Table of Contents
 
 * [Complete Example](#complete-example)
@@ -48,7 +57,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      # See "Multiple Architectures"
+      # See "Multiple Architectures" below
       - name: Setup QEMU
         if: ${{ matrix.arch == 'aarch64' }}
         id: qemu
@@ -114,45 +123,99 @@ manifests (JSON or YAML) to build.
 | `repo`                  | `repo`    | The path to export the repository      |
 | `cache-key`             | `flatter` | A cache key, or `''` to disable        |
 
+The `files` input may be either a single-line or multi-line string value:
+
+```yml
+# One manifest
+files: one.manifestFile.json
+
+# One or more manifests
+files: |
+  one.manifest.File.json
+  two.manifest.File.yml
+```
+
+The `arch` input must be set if building for a non-`x86-64` architecture, like
+`aarch64`. See [Multiple Architectures](#multiple-architectures) for more
+information.
+
+The `gpg-sign` input corresponds to the `--gpg-sign` command-line option and
+should be a GPG key fingerprint. See [GPG Signing](#gpg-signing) for more
+information.
+
+The `repo` input corresponds to the `--repo` command-line option and should be a
+path to a directory to export the repository. This directory is restored from
+cache before building the manifests and saved after, but left available in an
+ephemeral state for subsequent steps in the job. The directory can be found in
+`$GITHUB_WORKSPACE`.
+
+The `cache-key` input is used as a base to generate cache keys for the
+repository and build directories. The key can be rotated if the repository
+becomes too large or needs to be reset for some other reason.
+
 ### Deployment Options
 
-For more information, see [Deployment](#deployment).
+For more information about deploying Flatter, see [Deployment](#deployment).
 
 | Name                    | Default   | Description                            |
 |-------------------------|-----------|----------------------------------------|
 | `upload-bundles`        | `false`   | Upload a bundle for each application   |
 | `upload-pages-artifact` | `false`   | Upload the repo for GitHub Pages       |
-| `include-files`         | None      | Files to include in the repository     |
+| `include-files`         | None      | Files to include in GitHub Pages       |
 
+The `upload-bundles` input controls whether a Flatpak bundle will be uploaded
+when an application is built. See [Flatpak Bundles](#flatpak-bundles) for more
+information.
+
+The `upload-pages-artifact` input controls whether the repository will be
+uploaded as a GitHub Pages artifact. See [GitHub Pages](#github-pages) for more
+information.
+
+The `include-files` input allows including additional files in the GitHub Pages
+artifact, such as a `index.html`. See [GitHub Pages](#github-pages) for more
+information.
 
 ### Advanced Options
 
-For advanced use cases, Flatter offers an input for each command-line program
-used.
+For advanced use cases, extra command-line options can be passed to `flatpak`
+and `flatpak-builder`.
 
-| Name                        | Description                                    |
-|-----------------------------|------------------------------------------------|
-| `flatpak-builder-args`      | Command-line options for `flatpak-builder`     |
-| `flatpak-build-bundle-args` | Upload the repo for GitHub Pages               |
+| Name                        | Default | Description                          |
+|-----------------------------|---------|--------------------------------------|
+| `flatpak-builder-args`      | None    | Options for `flatpak-builder`        |
+| `flatpak-build-bundle-args` | None    | Options for `flatpak build-bundle`   |
 
-Flatter sets the following flags for `flatpak-builder` internally:
-  
-```sh
---arch
---ccache
---disable-rofiles-fuse
---force-clean
---gpg-sign
---repo
---state-dir
+The `flatpak-builder-args` input is a multi-line string of options to pass to
+`flatpak-builder`:
+
+```yml
+flatpak-builder-args: |
+  --default-branch=nightly
+  --skip-if-unchanged
+```
+
+The following options are set internally for `flatpak-builder`:
+
+* `--arch`
+* `--ccache`
+* `--disable-rofiles-fuse`
+* `--force-clean`
+* `--gpg-sign`
+* `--repo`
+* `--state-dir`
+
+The `flatpak-build-bundle-args` input is a multi-line string of options to pass
+to `flatpak build-bundle`:
+
+```yml
+flatpak-build-bundle-args: |
+  --runtime-repo=https://platform.io/platform.flatpakrepo
 ```
   
-Flatter sets the following flags for `flatpak build-bundle` internally:
-  
-```sh
---arch
---gpg-sign
-```
+The following options are set internally for `flatpak build-bundle`:
+
+* `--arch`
+* `--gpg-sign`
 
 ## Containers
 
