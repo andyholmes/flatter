@@ -74122,7 +74122,7 @@ async function parseManifest(manifestPath) {
  * @param {PathLike} directory - A path to a Flatpak repository
  * @returns {Promise<>} A promise for the operation
  */
-async function generateFlatpakrepo(directory) {
+async function generateDescription(directory) {
     /* Collect the .flatpakrepo fields */
     const {repository} = github.context.payload;
 
@@ -74237,9 +74237,13 @@ async function bundleApplication(directory, manifest) {
 /**
  * Restore the Flatpak repository from cache.
  *
+ * The repository is restored from the most recently saved cache with the same
+ * `cache-key` and GPG signature (if available).
+ *
+ * @param {PathLike} directory - A path to a Flatpak repository
  * @returns {Promise<>} A promise for the operation
  */
-async function restoreRepository() {
+async function restoreCache(directory) {
     core.startGroup('Restoring repository from cache...');
 
     try {
@@ -74251,7 +74255,7 @@ async function restoreRepository() {
         }
 
         // Restore the repository from cache
-        const cachePaths = [core.getInput('repo')];
+        const cachePaths = [directory];
         const cacheKey = core.getInput('gpg-sign')
             ? `${baseKey}-${core.getInput('gpg-sign')}-${Date.now()}`
             : `${baseKey}-${Date.now()}`;
@@ -74275,9 +74279,16 @@ async function restoreRepository() {
 /**
  * Save the Flatpak repository to cache.
  *
+ * The repository is saved by appending the GPG signature (if available) and a
+ * timestamp to the `cache-key`. Since the repository is restored with just the
+ * GPG signature appended to the `cache-key`, a cache hit never occurs and the
+ * most recently used cache is restored. The result is an incrementally updated
+ * repository, built on immutable caches.
+ *
+ * @param {PathLike} directory - A path to a Flatpak repository
  * @returns {Promise<>} A promise for the operation
  */
-async function saveRepository() {
+async function saveCache(directory) {
     core.startGroup('Saving repository to cache...');
 
     try {
@@ -74289,7 +74300,7 @@ async function saveRepository() {
         }
 
         // Save the repository to cache
-        const cachePaths = [core.getInput('repo')];
+        const cachePaths = [directory];
         const cacheKey = core.getInput('gpg-sign')
             ? `${baseKey}-${core.getInput('gpg-sign')}-${Date.now()}`
             : `${baseKey}-${Date.now()}`;
@@ -74339,7 +74350,7 @@ async function run() {
     /*
      * Rebuild the repository
      */
-    await restoreRepository();
+    await restoreCache(repo);
 
     for (const manifest of manifests) {
         core.startGroup(`Building "${manifest}"...`);
@@ -74353,7 +74364,7 @@ async function run() {
         core.endGroup();
     }
 
-    await saveRepository();
+    await saveCache(repo);
 
     /*
      * GitHub Pages Artifact
@@ -74363,7 +74374,7 @@ async function run() {
 
         // Generate a .flatpakrepo file
         try {
-            await generateFlatpakrepo(repo);
+            await generateDescription(repo);
         } catch (e) {
             core.warning(`Failed to generate .flatpakrepo: ${e.message}`);
         }

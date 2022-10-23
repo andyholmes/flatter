@@ -31,7 +31,7 @@ async function run() {
     /*
      * Rebuild the repository
      */
-    await flatter.restoreRepository();
+    await flatter.restoreCache(repo);
 
     for (const manifest of manifests) {
         core.startGroup(`Building "${manifest}"...`);
@@ -45,7 +45,7 @@ async function run() {
         core.endGroup();
     }
 
-    await flatter.saveRepository();
+    await flatter.saveCache(repo);
 
     /*
      * GitHub Pages Artifact
@@ -55,7 +55,7 @@ async function run() {
 
         // Generate a .flatpakrepo file
         try {
-            await flatter.generateFlatpakrepo(repo);
+            await flatter.generateDescription(repo);
         } catch (e) {
             core.warning(`Failed to generate .flatpakrepo: ${e.message}`);
         }
