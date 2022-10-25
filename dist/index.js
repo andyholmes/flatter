@@ -74016,60 +74016,9 @@ var jsYaml = {
 /* harmony default export */ const js_yaml = ((/* unused pure expression or super */ null && (jsYaml)));
 
 
-;// CONCATENATED MODULE: ./src/utils.js
-// SPDX-License-Identifier: GPL-3.0-or-later
-// SPDX-FileCopyrightText: 2022 Andy Holmes <andrew.g.r.holmes@gmail.com>
-
-
-
-
-
-
-
-
-/**
- * Get an input as a list of strings.
- *
- * See: https://github.com/actions/toolkit/issues/184
- *
- * @param {string} name - An input name
- * @param {core.InputOptions} [options] - Input options
- * @returns {string[]} A list of strings
- */
-function getStrvInput(name, options = {}) {
-    return core.getInput(name, options)
-        .split("\n")
-        .filter(x => x !== '');
-}
-
-/**
- * Upload a directory as a GitHub Pages Artifact.
- *
- * See: https://github.com/actions/upload-pages-artifact/blob/main/action.yml
- *
- * @param {PathLike} directory - A path to a directory
- */
-async function uploadPagesArtifact(directory) {
-    await exec.exec('tar', [
-        '--dereference',
-        '--hard-dereference',
-        '--directory', directory,
-        '-cvf', 'artifact.tar',
-        '--exclude=.git',
-        '--exclude=.github',
-        '.',
-    ]);
-
-    const artifactClient = artifact_client/* create */.U();
-    await artifactClient.uploadArtifact('github-pages', ['artifact.tar'], '.');
-}
-
-
 ;// CONCATENATED MODULE: ./src/flatter.js
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2022 Andy Holmes <andrew.g.r.holmes@gmail.com>
-
-
 
 
 
@@ -74182,7 +74131,7 @@ async function buildApplication(directory, manifest) {
         '--force-clean',
         `--repo=${directory}`,
         `--state-dir=${stateDir}`,
-        ...(getStrvInput('flatpak-builder-args')),
+        ...(core.getMultilineInput('flatpak-builder-args')),
     ];
 
     if (core.getInput('gpg-sign'))
@@ -74216,7 +74165,7 @@ async function bundleApplication(directory, manifest) {
 
     const bundleArgs = [
         `--arch=${core.getInput('arch')}`,
-        ...(getStrvInput('flatpak-build-bundle-args')),
+        ...(core.getMultilineInput('flatpak-build-bundle-args')),
     ];
 
     if (core.getInput('gpg-sign'))
@@ -74316,6 +74265,38 @@ async function saveCache(directory) {
 }
 
 
+;// CONCATENATED MODULE: ./src/utils.js
+// SPDX-License-Identifier: GPL-3.0-or-later
+// SPDX-FileCopyrightText: 2022 Andy Holmes <andrew.g.r.holmes@gmail.com>
+
+
+
+
+
+
+/**
+ * Upload a directory as a GitHub Pages Artifact.
+ *
+ * See: https://github.com/actions/upload-pages-artifact/blob/main/action.yml
+ *
+ * @param {PathLike} directory - A path to a directory
+ */
+async function uploadPagesArtifact(directory) {
+    await exec.exec('tar', [
+        '--dereference',
+        '--hard-dereference',
+        '--directory', directory,
+        '-cvf', 'artifact.tar',
+        '--exclude=.git',
+        '--exclude=.github',
+        '.',
+    ]);
+
+    const artifactClient = artifact_client/* create */.U();
+    await artifactClient.uploadArtifact('github-pages', ['artifact.tar'], '.');
+}
+
+
 ;// CONCATENATED MODULE: ./src/main.js
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2022 Andy Holmes <andrew.g.r.holmes@gmail.com>
@@ -74331,7 +74312,7 @@ async function saveCache(directory) {
 
 
 async function includeFiles(repo) {
-    const files = getStrvInput('include-files');
+    const files = core.getMultilineInput('include-files');
     const operations = files.map(src => {
         const dest = external_path_.join(repo, external_path_.basename(src));
         return external_fs_.promises.copyFile(src, dest);
@@ -74344,7 +74325,7 @@ async function includeFiles(repo) {
  * Run the action
  */
 async function run() {
-    const manifests = getStrvInput('files');
+    const manifests = core.getMultilineInput('files');
     const repo = core.getInput('repo');
 
     /*

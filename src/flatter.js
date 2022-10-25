@@ -11,8 +11,6 @@ import * as exec from '@actions/exec';
 import * as github from '@actions/github';
 import * as yaml from 'js-yaml';
 
-import * as utils from './utils.js';
-
 
 export {
     buildApplication,
@@ -120,7 +118,7 @@ async function buildApplication(directory, manifest) {
         '--force-clean',
         `--repo=${directory}`,
         `--state-dir=${stateDir}`,
-        ...(utils.getStrvInput('flatpak-builder-args')),
+        ...(core.getMultilineInput('flatpak-builder-args')),
     ];
 
     if (core.getInput('gpg-sign'))
@@ -154,7 +152,7 @@ async function bundleApplication(directory, manifest) {
 
     const bundleArgs = [
         `--arch=${core.getInput('arch')}`,
-        ...(utils.getStrvInput('flatpak-build-bundle-args')),
+        ...(core.getMultilineInput('flatpak-build-bundle-args')),
     ];
 
     if (core.getInput('gpg-sign'))
