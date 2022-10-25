@@ -12,7 +12,7 @@ import * as utils from './utils.js';
 
 
 async function includeFiles(repo) {
-    const files = utils.getStrvInput('include-files');
+    const files = core.getMultilineInput('include-files');
     const operations = files.map(src => {
         const dest = path.join(repo, path.basename(src));
         return fs.promises.copyFile(src, dest);
@@ -25,7 +25,7 @@ async function includeFiles(repo) {
  * Run the action
  */
 async function run() {
-    const manifests = utils.getStrvInput('files');
+    const manifests = core.getMultilineInput('files');
     const repo = core.getInput('repo');
 
     /*
