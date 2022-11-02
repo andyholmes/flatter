@@ -53,7 +53,7 @@ async function parseManifest(manifestPath) {
 }
 
 /**
- * Generate a .flatpakrepo file and copy it to the repository directory.
+ * Generate a .flatpakrepo file and add it to the repository directory.
  *
  * @param {PathLike} directory - A path to a Flatpak repository
  * @returns {Promise<>} A promise for the operation
@@ -78,12 +78,14 @@ async function generateDescription(directory) {
         metadata['GPGKey'] = publicKey;
     }
 
-    let flatpakrepo = '[Flatpak Repo]';
+    /* Generate and write the .flatpakrepo file */
+    const filePath = path.join(directory, 'index.flatpakrepo');
+    const fileData = ['[Flatpak Repo]'];
 
     for (const [key, value] of Object.entries(metadata))
-        flatpakrepo = `${flatpakrepo}\n${key}=${value}`;
+        fileData.push(`${key}=${value}`);
 
-    await fs.promises.writeFile(`${directory}/index.flatpakrepo`, flatpakrepo);
+    await fs.promises.writeFile(filePath, fileData.join('\n'));
 }
 
 

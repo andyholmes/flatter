@@ -87,12 +87,12 @@ async function run() {
 
         for (const manifest of manifests) {
             try {
-                const fileName = await flatter.bundleApplication(repo,
+                const filePath = await flatter.bundleApplication(repo,
                     manifest);
-                const artifactName = fileName.replace('.flatpak',
+                const artifactName = filePath.replace('.flatpak',
                     `-${core.getInput('arch')}`);
 
-                await artifactClient.uploadArtifact(artifactName, [fileName],
+                await artifactClient.uploadArtifact(artifactName, [filePath],
                     '.', { continueOnError: false });
             } catch (e) {
                 core.warning(`Failed to bundle "${manifest}": ${e.message}`);
