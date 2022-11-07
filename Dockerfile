@@ -19,3 +19,6 @@ RUN dnf install -y ccache \
 
 RUN flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo && \
     flatpak remote-add --if-not-exists gnome-nightly https://nightly.gnome.org/gnome-nightly.flatpakrepo
+
+# See: https://github.com/flatpak/flatpak-builder/issues/495
+RUN git config --global protocol.file.allow always
