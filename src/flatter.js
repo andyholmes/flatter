@@ -126,11 +126,16 @@ async function buildApplication(directory, manifest) {
     if (core.getInput('gpg-sign'))
         builderArgs.push(`--gpg-sign=${core.getInput('gpg-sign')}`);
 
+    const builderEnv = JSON.parse(JSON.stringify(process.env));
+    builderEnv['GIT_PROTOCOL_FROM_USER'] = '1';
+
     await exec.exec('flatpak-builder', [
         ...builderArgs,
         '_build',
         manifest,
-    ]);
+    ], {
+        env: builderEnv,
+    });
 
     if (!cacheId?.localeCompare(cacheKey, undefined, { sensitivity: 'accent' }))
         await cache.saveCache([stateDir], cacheKey);
