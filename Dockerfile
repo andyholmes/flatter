@@ -3,13 +3,11 @@
 
 FROM registry.fedoraproject.org/fedora:latest
 
-# Additional packages:
-#   - docker: docker/setup-qemu-action
-#   - rsync:  JamesIves/github-pages-deploy-action
-#   - zstd:   actions/cache
-#
-# See: https://github.com/andyholmes/copr/tree/main/flatpak-builder
-#      https://github.com/flatpak/flatpak-builder/issues/495
+# Notes:
+#   - docker:          docker/setup-qemu-action
+#   - flatpak-builder: Backport fix for flatpak/flatpak-builder#495
+#   - rsync:           JamesIves/github-pages-deploy-action
+#   - zstd:            actions/cache
 RUN dnf install -y 'dnf-command(copr)' && \
     dnf copr -y enable andyholmes/main && \
     dnf install -y ccache \
