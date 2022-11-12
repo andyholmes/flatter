@@ -10,17 +10,55 @@ import * as core from '@actions/core';
 import * as exec from '@actions/exec';
 import * as github from '@actions/github';
 import * as yaml from 'js-yaml';
+import { spawn } from 'child_process';
+import { homedir } from 'os';
+
+const DBUS_SOCKET = `${homedir()}/dbus.socket`
 
 
 export {
     buildApplication,
     bundleApplication,
+    testApplication,
     generateDescription,
     restoreCache,
     saveCache,
 };
 
 
+/**
+ * Start a D-Bus session and return the process and address.
+ *
+ * @returns {Promise<ChildProcess>}
+ */
+function startDBusSession() {
+    return new Promise((resolve, reject) => {
+        const dbus = spawn('dbus-daemon', [
+            '--session',
+            '--print-address',
+            `--address=unix:path=${DBUS_SOCKET}`,
+        ]);
+
+        dbus.stdout.on('data', (data) => {
+            try {
+                const decoder = new TextDecoder();
+                dbus.address = decoder.decode(data).trim();
+
+                resolve(dbus);
+            } catch (e) {
+                dbus.kill();
+                reject(e);
+            }
+        });
+    });
+}
+
+/**
+ * Get a SHA256 checksum for a file.
+ *
+ * @param {PathLike} filePath - A file path
+ * @returns {Promise<string>}
+ */
 function checksumFile(filePath) {
     return new Promise((resolve, reject) => {
         const hash = crypto.createHash('sha256');
@@ -32,11 +70,12 @@ function checksumFile(filePath) {
 }
 
 /**
- * Load a manifest
+ * Load a Flatpak manifest (JSON or YAML).
  *
  * @param {PathLike} manifestPath - A path to a Flatpak manifest
+ * @returns {Object} - A Flatpak manifest
  */
-async function parseManifest(manifestPath) {
+async function readManifest(manifestPath) {
     const data = await fs.promises.readFile(manifestPath);
 
     switch (path.extname(manifestPath)) {
@@ -50,6 +89,33 @@ async function parseManifest(manifestPath) {
         default:
             throw TypeError('Unsupported manifest format');
     }
+}
+
+/**
+ * Save a Flatpak manifest (JSON or YAML).
+ *
+ * @param {PathLike} manifestPath - A path to a Flatpak manifest
+ * @param {Object} manifest - A Flatpak manifest
+ * @returns {Promise<>} A promise for the operation
+ */
+async function writeManifest(manifestPath, manifest) {
+    let data = null;
+
+    switch (path.extname(manifestPath)) {
+        case '.json':
+            data = JSON.stringify(manifest);
+            break;
+
+        case '.yaml':
+        case '.yml':
+            data = yaml.dump(manifest);
+            break;
+
+        default:
+            throw TypeError('Unsupported manifest format');
+    }
+
+    await fs.promises.writeFile(manifestPath, data);
 }
 
 /**
@@ -90,7 +156,7 @@ async function generateDescription(directory) {
 
 
 /**
- * Build a Flatpak for the repository.
+ * Build a Flatpak application for the repository.
  *
  * A single repository cache is kept for all builds, while each architecture has
  * its own cache. This keeps the benefits of caching, while being able to serve
@@ -147,7 +213,7 @@ async function buildApplication(directory, manifest) {
  * @returns {Promise<>} A promise for the operation
  */
 async function bundleApplication(directory, manifest) {
-    const metadata = await parseManifest(manifest);
+    const metadata = await readManifest(manifest);
     const appId = metadata['app-id'] || metadata['id'];
     const branch = metadata['branch'] || metadata['default-branch'] || 'master';
     const fileName = `${appId}.flatpak`;
@@ -170,6 +236,98 @@ async function bundleApplication(directory, manifest) {
     ]);
 
     return fileName;
+}
+
+
+/**
+ * Build a Flatpak application for testing.
+ *
+ * @param {PathLike} directory - A path to a Flatpak repository
+ * @param {PathLike} manifest - A path to a Flatpak manifest
+ */
+async function testApplication(directory, manifest) {
+    const arch = core.getInput('arch');
+    const checksum = await checksumFile(manifest);
+    const stateDir = `.flatpak-builder-${arch}-${checksum}`;
+
+    const dbusSession = await startDBusSession();
+    const testManifest = await readManifest(manifest);
+    const testSubject = testManifest['modules'].pop();
+    testSubject['run-tests'] = true;
+
+    // Test Environment
+    const buildOptions = testManifest['build-options'] || {};
+    testManifest['build-options'] = {
+        ...(buildOptions),
+        'env': {
+            ...(buildOptions['env'] || {}),
+            DBUS_SESSION_BUS_ADDRESS: dbusSession.address,
+            DISPLAY: '0:0',
+        },
+        'test-args': [
+            ...(buildOptions['test-args'] || []),
+            `--filesystem=${DBUS_SOCKET}`,
+            '--share=network',
+            '--socket=x11',
+        ],
+    };
+
+    // `meson setup` options
+    if (core.getInput('test-config-opts')) {
+        testSubject['config-opts'] = [
+            ...(testSubject['config-opts'] || []),
+            ...(core.getMultilineInput('test-config-opts')),
+        ];
+    }
+
+    // Set the module source to the current working directory
+    const testSubjectSources = testSubject['sources'].pop();
+    if (testSubjectSources) {
+        if (testSubjectSources['type'] === 'dir')
+            testSubject['sources'].push(testSubjectSources);
+        else
+            testSubject['sources'].push({ type: 'dir', path: process.cwd() });
+    }
+
+    // Prepend test dependencies
+    if (core.getInput('test-modules'))
+        testManifest['modules'].push(...core.getMultilineInput('test-modules'));
+    testManifest['modules'].push(testSubject);
+
+    await writeManifest(manifest, testManifest);
+
+    // Build Phase
+    let cacheId, cacheKey;
+    if ((cacheKey = core.getInput('cache-key')) && cache.isFeatureAvailable()) {
+        cacheKey = `${cacheKey}-${arch}-${checksum}`;
+        cacheId = await cache.restoreCache([stateDir], cacheKey);
+    }
+
+    const builderArgs = [
+        `--arch=${arch}`,
+        '--ccache',
+        '--disable-rofiles-fuse',
+        '--force-clean',
+        `--repo=${directory}`,
+        `--state-dir=${stateDir}`,
+        ...(core.getMultilineInput('flatpak-builder-args')),
+    ];
+
+    if (core.getInput('gpg-sign'))
+        builderArgs.push(`--gpg-sign=${core.getInput('gpg-sign')}`);
+
+    try {
+        await exec.exec('xvfb-run --auto-servernum flatpak-builder', [
+            ...builderArgs,
+            '_build',
+            manifest,
+        ]);
+    } finally {
+        dbusSession.kill();
+    }
+
+    if (!cacheId?.localeCompare(cacheKey, undefined, { sensitivity: 'accent' }))
+        await cache.saveCache([stateDir], cacheKey);
 }
 
 /**

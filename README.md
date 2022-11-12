@@ -175,6 +175,30 @@ The `include-files` input allows including additional files in the GitHub Pages
 artifact, such as a `index.html`. See [GitHub Pages](#github-pages) for more
 information.
 
+### Test Options
+
+Flatter supports an opinionated test runner, dynamically rewriting Flatpak
+manifests to accomodate a testing environment, including a D-Bus session and
+X11 server. The intention is that a Flatpak manifest can be passed for testing
+in a CI, then passed for distribution as a nightly build if successful.
+
+| Name                    | Default   | Description                            |
+|-------------------------|-----------|----------------------------------------|
+| `run-tests`             | `false`   | Override for the manifest's value      |
+| `test-config-opts`      | None      | Options for `meson setup`              |
+| `test-modules`          | None      | Manifest of test dependencies          |
+
+The `run-tests` input overrides the manifest field of the same name, instructing
+`flatpak-builder` to run `ninja test` once the project is built. If this input
+is `true`, the repository cache will not be updated.
+
+The `test-config-opts` input is a list of extra options to pass to `meson setup`
+for the target application, used for options like `-Dtests=true`.
+
+The `test-modules` input is a path to a manifest of extra dependencies, relative
+to the application manifest. This is a convenient way to keep test dependencies
+separate from release dependencies.
+
 ### Advanced Options
 
 For advanced use cases, extra command-line options can be passed to `flatpak`
