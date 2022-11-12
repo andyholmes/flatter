@@ -74533,28 +74533,23 @@ async function run() {
     if (core.getBooleanInput('upload-pages-artifact')) {
         core.startGroup('Uploading GitHub Pages artifact...');
 
-        // Generate a .flatpakrepo file
         try {
+            // Generate a .flatpakrepo file
             await generateDescription(repo);
-        } catch (e) {
-            core.warning(`Failed to generate .flatpakrepo: ${e.message}`);
-        }
 
-        // Copy extra files to the repository directory
-        try {
+            // Copy extra files to the repository directory
             await includeFiles(repo);
-        } catch (e) {
-            core.warning(`Failed to copy extra files: ${e.message}`);
-        }
 
-        // Upload the repository directory as a Github Pages artifact
-        try {
+            // Upload the repository directory as a Github Pages artifact
             await uploadPagesArtifact(repo);
         } catch (e) {
-            core.warning(`Failed to upload GitHub Pages artifact: ${e.message}`);
+            core.setFailed(`Failed to upload artifact: ${e.message}`);
         }
 
         core.endGroup();
+
+        if (process.exitCode === core.ExitCode.Failure)
+            return;
     }
 
     /*
@@ -74575,7 +74570,7 @@ async function run() {
                 await artifactClient.uploadArtifact(artifactName, [filePath],
                     '.', { continueOnError: false });
             } catch (e) {
-                core.warning(`Failed to bundle "${manifest}": ${e.message}`);
+                core.setFailed(`Failed to bundle "${manifest}": ${e.message}`);
             }
         }
 
