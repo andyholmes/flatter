@@ -74016,6 +74016,10 @@ var jsYaml = {
 /* harmony default export */ const js_yaml = ((/* unused pure expression or super */ null && (jsYaml)));
 
 
+// EXTERNAL MODULE: external "child_process"
+var external_child_process_ = __nccwpck_require__(2081);
+// EXTERNAL MODULE: external "os"
+var external_os_ = __nccwpck_require__(2037);
 ;// CONCATENATED MODULE: ./src/flatter.js
 // SPDX-License-Identifier: GPL-3.0-or-later
 // SPDX-FileCopyrightText: 2022 Andy Holmes <andrew.g.r.holmes@gmail.com>
@@ -74032,8 +74036,45 @@ var jsYaml = {
 
 
 
+const DBUS_SOCKET = `${(0,external_os_.homedir)()}/dbus.socket`
 
 
+
+
+
+/**
+ * Start a D-Bus session and return the process and address.
+ *
+ * @returns {Promise<ChildProcess>}
+ */
+function startDBusSession() {
+    return new Promise((resolve, reject) => {
+        const dbus = (0,external_child_process_.spawn)('dbus-daemon', [
+            '--session',
+            '--print-address',
+            `--address=unix:path=${DBUS_SOCKET}`,
+        ]);
+
+        dbus.stdout.on('data', (data) => {
+            try {
+                const decoder = new TextDecoder();
+                dbus.address = decoder.decode(data).trim();
+
+                resolve(dbus);
+            } catch (e) {
+                dbus.kill();
+                reject(e);
+            }
+        });
+    });
+}
+
+/**
+ * Get a SHA256 checksum for a file.
+ *
+ * @param {PathLike} filePath - A file path
+ * @returns {Promise<string>}
+ */
 function checksumFile(filePath) {
     return new Promise((resolve, reject) => {
         const hash = external_crypto_.createHash('sha256');
@@ -74045,11 +74086,12 @@ function checksumFile(filePath) {
 }
 
 /**
- * Load a manifest
+ * Load a Flatpak manifest (JSON or YAML).
  *
  * @param {PathLike} manifestPath - A path to a Flatpak manifest
+ * @returns {Object} - A Flatpak manifest
  */
-async function parseManifest(manifestPath) {
+async function readManifest(manifestPath) {
     const data = await external_fs_.promises.readFile(manifestPath);
 
     switch (external_path_.extname(manifestPath)) {
@@ -74063,6 +74105,33 @@ async function parseManifest(manifestPath) {
         default:
             throw TypeError('Unsupported manifest format');
     }
+}
+
+/**
+ * Save a Flatpak manifest (JSON or YAML).
+ *
+ * @param {PathLike} manifestPath - A path to a Flatpak manifest
+ * @param {Object} manifest - A Flatpak manifest
+ * @returns {Promise<>} A promise for the operation
+ */
+async function writeManifest(manifestPath, manifest) {
+    let data = null;
+
+    switch (external_path_.extname(manifestPath)) {
+        case '.json':
+            data = JSON.stringify(manifest);
+            break;
+
+        case '.yaml':
+        case '.yml':
+            data = dump(manifest);
+            break;
+
+        default:
+            throw TypeError('Unsupported manifest format');
+    }
+
+    await external_fs_.promises.writeFile(manifestPath, data);
 }
 
 /**
@@ -74103,7 +74172,7 @@ async function generateDescription(directory) {
 
 
 /**
- * Build a Flatpak for the repository.
+ * Build a Flatpak application for the repository.
  *
  * A single repository cache is kept for all builds, while each architecture has
  * its own cache. This keeps the benefits of caching, while being able to serve
@@ -74160,7 +74229,7 @@ async function buildApplication(directory, manifest) {
  * @returns {Promise<>} A promise for the operation
  */
 async function bundleApplication(directory, manifest) {
-    const metadata = await parseManifest(manifest);
+    const metadata = await readManifest(manifest);
     const appId = metadata['app-id'] || metadata['id'];
     const branch = metadata['branch'] || metadata['default-branch'] || 'master';
     const fileName = `${appId}.flatpak`;
@@ -74183,6 +74252,98 @@ async function bundleApplication(directory, manifest) {
     ]);
 
     return fileName;
+}
+
+
+/**
+ * Build a Flatpak application for testing.
+ *
+ * @param {PathLike} directory - A path to a Flatpak repository
+ * @param {PathLike} manifest - A path to a Flatpak manifest
+ */
+async function testApplication(directory, manifest) {
+    const arch = core.getInput('arch');
+    const checksum = await checksumFile(manifest);
+    const stateDir = `.flatpak-builder-${arch}-${checksum}`;
+
+    const dbusSession = await startDBusSession();
+    const testManifest = await readManifest(manifest);
+    const testSubject = testManifest['modules'].pop();
+    testSubject['run-tests'] = true;
+
+    // Test Environment
+    const buildOptions = testManifest['build-options'] || {};
+    testManifest['build-options'] = {
+        ...(buildOptions),
+        'env': {
+            ...(buildOptions['env'] || {}),
+            DBUS_SESSION_BUS_ADDRESS: dbusSession.address,
+            DISPLAY: '0:0',
+        },
+        'test-args': [
+            ...(buildOptions['test-args'] || []),
+            `--filesystem=${DBUS_SOCKET}`,
+            '--share=network',
+            '--socket=x11',
+        ],
+    };
+
+    // `meson setup` options
+    if (core.getInput('test-config-opts')) {
+        testSubject['config-opts'] = [
+            ...(testSubject['config-opts'] || []),
+            ...(core.getMultilineInput('test-config-opts')),
+        ];
+    }
+
+    // Set the module source to the current working directory
+    const testSubjectSources = testSubject['sources'].pop();
+    if (testSubjectSources) {
+        if (testSubjectSources['type'] === 'dir')
+            testSubject['sources'].push(testSubjectSources);
+        else
+            testSubject['sources'].push({ type: 'dir', path: process.cwd() });
+    }
+
+    // Prepend test dependencies
+    if (core.getInput('test-modules'))
+        testManifest['modules'].push(...core.getMultilineInput('test-modules'));
+    testManifest['modules'].push(testSubject);
+
+    await writeManifest(manifest, testManifest);
+
+    // Build Phase
+    let cacheId, cacheKey;
+    if ((cacheKey = core.getInput('cache-key')) && cache.isFeatureAvailable()) {
+        cacheKey = `${cacheKey}-${arch}-${checksum}`;
+        cacheId = await cache.restoreCache([stateDir], cacheKey);
+    }
+
+    const builderArgs = [
+        `--arch=${arch}`,
+        '--ccache',
+        '--disable-rofiles-fuse',
+        '--force-clean',
+        `--repo=${directory}`,
+        `--state-dir=${stateDir}`,
+        ...(core.getMultilineInput('flatpak-builder-args')),
+    ];
+
+    if (core.getInput('gpg-sign'))
+        builderArgs.push(`--gpg-sign=${core.getInput('gpg-sign')}`);
+
+    try {
+        await exec.exec('xvfb-run --auto-servernum flatpak-builder', [
+            ...builderArgs,
+            '_build',
+            manifest,
+        ]);
+    } finally {
+        dbusSession.kill();
+    }
+
+    if (!cacheId?.localeCompare(cacheKey, undefined, { sensitivity: 'accent' }))
+        await cache.saveCache([stateDir], cacheKey);
 }
 
 /**
@@ -74331,23 +74492,40 @@ async function run() {
     const repo = core.getInput('repo');
 
     /*
-     * Rebuild the repository
+     * Build the Flatpak manifests
      */
-    await restoreCache(repo);
+    if (core.getInput('run-tests')) {
+        for (const manifest of manifests) {
+            core.startGroup(`Testing "${manifest}"...`);
 
-    for (const manifest of manifests) {
-        core.startGroup(`Building "${manifest}"...`);
+            try {
+                await testApplication(repo, manifest);
+            } catch (e) {
+                core.setFailed(`Testing "${manifest}": ${e.message}`);
+            }
 
-        try {
-            await buildApplication(repo, manifest);
-        } catch (e) {
-            core.warning(`Failed to build "${manifest}": ${e.message}`);
+            core.endGroup();
+        }
+    } else {
+        await restoreCache(repo);
+
+        for (const manifest of manifests) {
+            core.startGroup(`Building "${manifest}"...`);
+
+            try {
+                await buildApplication(repo, manifest);
+            } catch (e) {
+                core.setFailed(`Failed to build "${manifest}": ${e.message}`);
+            }
+
+            core.endGroup();
         }
 
-        core.endGroup();
+        await saveCache(repo);
     }
 
-    await saveCache(repo);
+    if (process.exitCode === core.ExitCode.Failure)
+        return;
 
     /*
      * GitHub Pages Artifact

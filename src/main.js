@@ -29,23 +29,40 @@ async function run() {
     const repo = core.getInput('repo');
 
     /*
-     * Rebuild the repository
+     * Build the Flatpak manifests
      */
-    await flatter.restoreCache(repo);
+    if (core.getInput('run-tests')) {
+        for (const manifest of manifests) {
+            core.startGroup(`Testing "${manifest}"...`);
 
-    for (const manifest of manifests) {
-        core.startGroup(`Building "${manifest}"...`);
+            try {
+                await flatter.testApplication(repo, manifest);
+            } catch (e) {
+                core.setFailed(`Testing "${manifest}": ${e.message}`);
+            }
 
-        try {
-            await flatter.buildApplication(repo, manifest);
-        } catch (e) {
-            core.warning(`Failed to build "${manifest}": ${e.message}`);
+            core.endGroup();
+        }
+    } else {
+        await flatter.restoreCache(repo);
+
+        for (const manifest of manifests) {
+            core.startGroup(`Building "${manifest}"...`);
+
+            try {
+                await flatter.buildApplication(repo, manifest);
+            } catch (e) {
+                core.setFailed(`Failed to build "${manifest}": ${e.message}`);
+            }
+
+            core.endGroup();
         }
 
-        core.endGroup();
+        await flatter.saveCache(repo);
     }
 
-    await flatter.saveCache(repo);
+    if (process.exitCode === core.ExitCode.Failure)
+        return;
 
     /*
      * GitHub Pages Artifact

@@ -48,6 +48,21 @@ inputs:
       A list of extra files to include in the GitHub Pages artifact.
     required: false
 
+  # Test Options
+  run-tests:
+    description: >
+      Build and run tests in a Flatpak environment.
+    required: false
+    default: false
+  test-config-opts:
+    description: >
+      Extra command-line options for `meson setup`
+    required: false
+  test-modules:
+    description: >
+      Path to a manifest of dependencies, relative to the root manifest.
+    required: false
+
   # Advanced Options
   flatpak-builder-args:
     description: >
