@@ -74262,10 +74262,6 @@ async function bundleApplication(directory, manifest) {
  * @param {PathLike} manifest - A path to a Flatpak manifest
  */
 async function testApplication(directory, manifest) {
-    const arch = core.getInput('arch');
-    const checksum = await checksumFile(manifest);
-    const stateDir = `.flatpak-builder-${arch}-${checksum}`;
-
     const dbusSession = await startDBusSession();
     const testManifest = await readManifest(manifest);
     const testSubject = testManifest['modules'].pop();
@@ -74313,6 +74309,10 @@ async function testApplication(directory, manifest) {
     await writeManifest(manifest, testManifest);
 
     // Build Phase
+    const arch = core.getInput('arch');
+    const checksum = await checksumFile(manifest);
+    const stateDir = `.flatpak-builder-${arch}-${checksum}`;
+
     let cacheId, cacheKey;
     if ((cacheKey = core.getInput('cache-key')) && cache.isFeatureAvailable()) {
         cacheKey = `${cacheKey}-${arch}-${checksum}`;
