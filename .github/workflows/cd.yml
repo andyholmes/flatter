@@ -1,9 +1,8 @@
-name: Test
+name: Continuous Deployment
 
 on:
   push:
     branches: [main]
-    paths: [dist/**]
   pull_request:
     branches: [main]
     paths: [dist/**]
