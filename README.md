@@ -18,6 +18,7 @@ also has a beta channel.
 * [Inputs](#inputs)
   * [Deployment Options](#deployment-options)
   * [Advanced Options](#advanced-options)
+* [Outputs](#outputs)
 * [Containers](#containers)
 * [GPG Signing](#gpg-signing)
 * [Deployment](#deployment)
@@ -87,7 +88,7 @@ jobs:
           gpg-sign: ${{ steps.gpg.outputs.fingerprint }}
           upload-bundles: true
           upload-pages-artifact: ${{ matrix.arch == 'aarch64' }}
-          include-files: |
+          upload-pages-includes: |
             CNAME
             default.css
             index.html
@@ -120,7 +121,6 @@ manifests (JSON or YAML) to build.
 | `files`                 | None      | A list of paths to Flatpak manifests   |
 | `arch`                  | `x86_64`  | The architecture to build for          |
 | `gpg-sign`              | None      | A GPG Key fingerprint                  |
-| `repo`                  | `repo`    | The path to export the repository      |
 | `cache-key`             | `flatter` | A cache key, or `''` to disable        |
 
 The `files` input may be either a single-line or multi-line string value:
@@ -143,12 +143,6 @@ The `gpg-sign` input corresponds to the `--gpg-sign` command-line option and
 should be a GPG key fingerprint. See [GPG Signing](#gpg-signing) for more
 information.
 
-The `repo` input corresponds to the `--repo` command-line option and should be a
-path to a directory to export the repository. This directory is restored from
-cache before building the manifests and saved after, but left available in an
-ephemeral state for subsequent steps in the job. The directory can be found in
-`$GITHUB_WORKSPACE`.
-
 The `cache-key` input is used as a base to generate cache keys for the
 repository and build directories. The key can be rotated if the repository
 becomes too large or needs to be reset for some other reason.
@@ -161,7 +155,7 @@ For more information about deploying Flatter, see [Deployment](#deployment).
 |-------------------------|-----------|----------------------------------------|
 | `upload-bundles`        | `false`   | Upload a bundle for each application   |
 | `upload-pages-artifact` | `false`   | Upload the repo for GitHub Pages       |
-| `include-files`         | None      | Files to include in GitHub Pages       |
+| `upload-pages-includes`         | None      | Files to include in GitHub Pages       |
 
 The `upload-bundles` input controls whether a Flatpak bundle will be uploaded
 when an application is built. See [Flatpak Bundles](#flatpak-bundles) for more
@@ -171,14 +165,14 @@ The `upload-pages-artifact` input controls whether the repository will be
 uploaded as a GitHub Pages artifact. See [GitHub Pages](#github-pages) for more
 information.
 
-The `include-files` input allows including additional files in the GitHub Pages
+The `upload-pages-includes` input allows including additional files in the GitHub Pages
 artifact, such as a `index.html`. See [GitHub Pages](#github-pages) for more
 information.
 
 ### Test Options
 
 Flatter supports an opinionated test runner, dynamically rewriting Flatpak
-manifests to accomodate a testing environment, including a D-Bus session and
+manifests to accommodate a testing environment, including a D-Bus session and
 X11 server. The intention is that a Flatpak manifest can be passed for testing
 in a CI, then passed for distribution as a nightly build if successful.
 
@@ -240,6 +234,45 @@ The following options are set internally for `flatpak build-bundle`:
 
 * `--arch`
 * `--gpg-sign`
+
+## Outputs
+
+The only required input is `files`, which should be a list of paths to Flatpak
+manifests (JSON or YAML) to build.
+
+| Name                    | Description                                        |
+|-------------------------|----------------------------------------------------|
+| `repository`            | Absolute path to the Flatpak repository            |
+
+The `files` input may be either a single-line or multi-line string value:
+
+```yml
+# One manifest
+files: one.manifestFile.json
+
+# One or more manifests
+files: |
+  one.manifest.File.json
+  two.manifest.File.yml
+```
+
+The `arch` input must be set if building for a non-`x86-64` architecture, like
+`aarch64`. See [Multiple Architectures](#multiple-architectures) for more
+information.
+
+The `gpg-sign` input corresponds to the `--gpg-sign` command-line option and
+should be a GPG key fingerprint. See [GPG Signing](#gpg-signing) for more
+information.
+
+The `repository` output is an absolute path to the directory where the Flatpak
+repository was created, corresponding to the `--repo` command-line option. This directory is restored from
+cache before building the manifests and saved after, but left available in an
+ephemeral state for subsequent steps in the job. The directory can be found in
+`$GITHUB_WORKSPACE`.
+
+The `cache-key` input is used as a base to generate cache keys for the
+repository and build directories. The key can be rotated if the repository
+becomes too large or needs to be reset for some other reason.
 
 ## Containers
 
@@ -352,7 +385,7 @@ recent Flatpak bundle built by Flatter.
 Flatter can upload the repository as an artifact compatible with GitHub Pages,
 making the pages for the GitHub repository a Flatpak Repository. Flutter will
 generate an `index.flatpakrepo` file in the repository directory and other files
-can be added with the `include-files` input (e.g.`index.html`).
+can be added with the `upload-pages-includes` input (e.g.`index.html`).
 
 1. Set the `upload-pages-artifact` input to `true`
 2. In the **Settings** for the GitHub repository, select **Pages** in the
@@ -386,7 +419,7 @@ jobs:
           files: |
             build-aux/flatpak/com.example.App.json
           upload-pages-artifact: true
-          include-files: |
+          upload-pages-includes: |
             default.css
             index.html
 
@@ -413,8 +446,8 @@ jobs:
 
 The Flatpak repository directory can also be deployed with another action, such
 as [`JamesIves/github-pages-deploy-action`][deploy-custom]. The example below
-deploys the Flatpak repository in the subfolder `/repo`, without disturbing
-other files in the deployment environment:
+triggers a GitHub Pages deployment by committing the Flatpak repository to the
+`gh-pages` branch as the subfolder `/repo`:
 
 ```yml
 name: Flatter (Deploy)
@@ -439,16 +472,16 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Build
+        id: flatpak
         uses: andyholmes/actions/flatter@main
         with:
           files: |
             build-aux/flatpak/com.example.App.json
-          repo: repo
 
       - name: Deploy Repository
         uses: JamesIves/github-pages-deploy-action@releases/v4
         with:
-          folder: repo
+          folder: ${{ steps.flatpak.outputs.repository }}
           target-folder: repo
 ```
 
