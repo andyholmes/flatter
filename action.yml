@@ -2,11 +2,11 @@
 # SPDX-FileCopyrightText: 2022 Andy Holmes <andrew.g.r.holmes@gmail.com>
 
 name: Flatter
-description: Build and distribute Flatpak applications
+description: Build and host a Flatpak repository
 author: Andy Holmes
 branding:
   icon: package
-  color: blue
+  color: brown
 inputs:
   files:
     description: >
@@ -20,11 +20,6 @@ inputs:
   gpg-sign:
     description: >
       The fingerprint of a GPG key to sign the repository with.
-    required: false
-  repo:
-    description: >
-      The folder used to store Flatpak repository files.
-    default: repo
     required: false
   cache-key:
     description: >
@@ -43,9 +38,9 @@ inputs:
       Upload the repository as a GitHub Pages artifact.
     default: false
     required: false
-  include-files:
+  upload-pages-includes:
     description: >
-      A list of extra files to include in the GitHub Pages artifact.
+      A list of files to include in the GitHub Pages artifact.
     required: false
 
   # Test Options

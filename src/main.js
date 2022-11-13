@@ -12,7 +12,7 @@ import * as utils from './utils.js';
 
 
 async function includeFiles(repo) {
-    const files = core.getMultilineInput('include-files');
+    const files = core.getMultilineInput('upload-pages-includes');
     const operations = files.map(src => {
         const dest = path.join(repo, path.basename(src));
         return fs.promises.copyFile(src, dest);
@@ -26,7 +26,9 @@ async function includeFiles(repo) {
  */
 async function run() {
     const manifests = core.getMultilineInput('files');
-    const repo = core.getInput('repo');
+    const repository = `${process.cwd()}/repo`;
+    core.setOutput('repository', repository);
+
 
     /*
      * Build the Flatpak manifests
@@ -36,7 +38,7 @@ async function run() {
             core.startGroup(`Testing "${manifest}"...`);
 
             try {
-                await flatter.testApplication(repo, manifest);
+                await flatter.testApplication(repository, manifest);
             } catch (e) {
                 core.setFailed(`Testing "${manifest}": ${e.message}`);
             }
@@ -44,13 +46,13 @@ async function run() {
             core.endGroup();
         }
     } else {
-        await flatter.restoreCache(repo);
+        await flatter.restoreCache(repository);
 
         for (const manifest of manifests) {
             core.startGroup(`Building "${manifest}"...`);
 
             try {
-                await flatter.buildApplication(repo, manifest);
+                await flatter.buildApplication(repository, manifest);
             } catch (e) {
                 core.setFailed(`Failed to build "${manifest}": ${e.message}`);
             }
@@ -58,7 +60,7 @@ async function run() {
             core.endGroup();
         }
 
-        await flatter.saveCache(repo);
+        await flatter.saveCache(repository);
     }
 
     if (process.exitCode === core.ExitCode.Failure)
@@ -72,13 +74,13 @@ async function run() {
 
         try {
             // Generate a .flatpakrepo file
-            await flatter.generateDescription(repo);
+            await flatter.generateDescription(repository);
 
             // Copy extra files to the repository directory
-            await includeFiles(repo);
+            await includeFiles(repository);
 
             // Upload the repository directory as a Github Pages artifact
-            await utils.uploadPagesArtifact(repo);
+            await utils.uploadPagesArtifact(repository);
         } catch (e) {
             core.setFailed(`Failed to upload artifact: ${e.message}`);
         }
@@ -99,7 +101,7 @@ async function run() {
 
         for (const manifest of manifests) {
             try {
-                const filePath = await flatter.bundleApplication(repo,
+                const filePath = await flatter.bundleApplication(repository,
                     manifest);
                 const artifactName = filePath.replace('.flatpak',
                     `-${core.getInput('arch')}`);

@@ -74036,14 +74036,15 @@ var external_os_ = __nccwpck_require__(2037);
 
 
 
-const DBUS_SOCKET = `${(0,external_os_.homedir)()}/dbus.socket`
-
 
 
 
 
 /**
- * Start a D-Bus session and return the process and address.
+ * Start a D-Bus session and return the child process.
+ *
+ * The returned object will have two additional properties, `address` and
+ * `socket`, holding the D-Bus address and socket file, respectively.
  *
  * @returns {Promise<ChildProcess>}
  */
@@ -74052,13 +74053,14 @@ function startDBusSession() {
         const dbus = (0,external_child_process_.spawn)('dbus-daemon', [
             '--session',
             '--print-address',
-            `--address=unix:path=${DBUS_SOCKET}`,
+            `--address=unix:path=${(0,external_os_.homedir)()}/dbus.socket`,
         ]);
 
         dbus.stdout.on('data', (data) => {
             try {
                 const decoder = new TextDecoder();
                 dbus.address = decoder.decode(data).trim();
+                dbus.socket = `${(0,external_os_.homedir)()}/dbus.socket`;
 
                 resolve(dbus);
             } catch (e) {
@@ -74190,9 +74192,6 @@ async function buildApplication(directory, manifest) {
     if ((cacheKey = core.getInput('cache-key')) && cache.isFeatureAvailable()) {
         cacheKey = `${cacheKey}-${arch}-${checksum}`;
         cacheId = await cache.restoreCache([stateDir], cacheKey);
-
-        if (cacheId)
-            core.info(`Cache "${cacheId}" restored with key "${cacheKey}"`);
     }
 
     const builderArgs = [
@@ -74262,53 +74261,6 @@ async function bundleApplication(directory, manifest) {
  * @param {PathLike} manifest - A path to a Flatpak manifest
  */
 async function testApplication(directory, manifest) {
-    const dbusSession = await startDBusSession();
-    const testManifest = await readManifest(manifest);
-    const testSubject = testManifest['modules'].pop();
-    testSubject['run-tests'] = true;
-
-    // Test Environment
-    const buildOptions = testManifest['build-options'] || {};
-    testManifest['build-options'] = {
-        ...(buildOptions),
-        'env': {
-            ...(buildOptions['env'] || {}),
-            DBUS_SESSION_BUS_ADDRESS: dbusSession.address,
-            DISPLAY: '0:0',
-        },
-        'test-args': [
-            ...(buildOptions['test-args'] || []),
-            `--filesystem=${DBUS_SOCKET}`,
-            '--share=network',
-            '--socket=x11',
-        ],
-    };
-
-    // `meson setup` options
-    if (core.getInput('test-config-opts')) {
-        testSubject['config-opts'] = [
-            ...(testSubject['config-opts'] || []),
-            ...(core.getMultilineInput('test-config-opts')),
-        ];
-    }
-
-    // Set the module source to the current working directory
-    const testSubjectSources = testSubject['sources'].pop();
-    if (testSubjectSources) {
-        if (testSubjectSources['type'] === 'dir')
-            testSubject['sources'].push(testSubjectSources);
-        else
-            testSubject['sources'].push({ type: 'dir', path: process.cwd() });
-    }
-
-    // Prepend test dependencies
-    if (core.getInput('test-modules'))
-        testManifest['modules'].push(...core.getMultilineInput('test-modules'));
-    testManifest['modules'].push(testSubject);
-
-    await writeManifest(manifest, testManifest);
-
-    // Build Phase
     const arch = core.getInput('arch');
     const checksum = await checksumFile(manifest);
     const stateDir = `.flatpak-builder-${arch}-${checksum}`;
@@ -74319,6 +74271,56 @@ async function testApplication(directory, manifest) {
         cacheId = await cache.restoreCache([stateDir], cacheKey);
     }
 
+    /*
+     * Prepare the Flatpak manifest
+     */
+    const testManifest = await readManifest(manifest);
+    const testSubject = testManifest['modules'].pop();
+    testSubject['run-tests'] = true;
+
+    //
+    const dbusSession = await startDBusSession();
+    const buildOptions = testManifest['build-options'] || {};
+    testManifest['build-options'] = {
+        ...(buildOptions),
+        'env': {
+            ...(buildOptions['env'] || {}),
+            DBUS_SESSION_BUS_ADDRESS: dbusSession.address,
+            DISPLAY: '0:0',
+        },
+        'test-args': [
+            ...(buildOptions['test-args'] || []),
+            `--filesystem=${dbusSession.socket}`,
+            '--share=network',
+            '--socket=x11',
+        ],
+    };
+
+    // Extra command-line options for `meson setup`
+    if (core.getInput('test-config-opts')) {
+        testSubject['config-opts'] = [
+            ...(testSubject['config-opts'] || []),
+            ...(core.getMultilineInput('test-config-opts')),
+        ];
+    }
+
+    // Ensure the sources for the test subject are a directory
+    const testSubjectSources = testSubject['sources'].pop();
+    if (testSubjectSources) {
+        if (testSubjectSources['type'] === 'dir')
+            testSubject['sources'].push(testSubjectSources);
+        else
+            testSubject['sources'].push({ type: 'dir', path: process.cwd() });
+    }
+
+    // Ensure the test dependencies are built before the test subject
+    if (core.getInput('test-modules'))
+        testManifest['modules'].push(...core.getMultilineInput('test-modules'));
+    testManifest['modules'].push(testSubject);
+
+    await writeManifest(manifest, testManifest);
+
+    // Build Phase
     const builderArgs = [
         `--arch=${arch}`,
         '--ccache',
@@ -74475,7 +74477,7 @@ async function uploadPagesArtifact(directory) {
 
 
 async function includeFiles(repo) {
-    const files = core.getMultilineInput('include-files');
+    const files = core.getMultilineInput('upload-pages-includes');
     const operations = files.map(src => {
         const dest = external_path_.join(repo, external_path_.basename(src));
         return external_fs_.promises.copyFile(src, dest);
@@ -74489,7 +74491,9 @@ async function includeFiles(repo) {
  */
 async function run() {
     const manifests = core.getMultilineInput('files');
-    const repo = core.getInput('repo');
+    const repository = `${process.cwd()}/repo`;
+    core.setOutput('repository', repository);
+
 
     /*
      * Build the Flatpak manifests
@@ -74499,7 +74503,7 @@ async function run() {
             core.startGroup(`Testing "${manifest}"...`);
 
             try {
-                await testApplication(repo, manifest);
+                await testApplication(repository, manifest);
             } catch (e) {
                 core.setFailed(`Testing "${manifest}": ${e.message}`);
             }
@@ -74507,13 +74511,13 @@ async function run() {
             core.endGroup();
         }
     } else {
-        await restoreCache(repo);
+        await restoreCache(repository);
 
         for (const manifest of manifests) {
             core.startGroup(`Building "${manifest}"...`);
 
             try {
-                await buildApplication(repo, manifest);
+                await buildApplication(repository, manifest);
             } catch (e) {
                 core.setFailed(`Failed to build "${manifest}": ${e.message}`);
             }
@@ -74521,7 +74525,7 @@ async function run() {
             core.endGroup();
         }
 
-        await saveCache(repo);
+        await saveCache(repository);
     }
 
     if (process.exitCode === core.ExitCode.Failure)
@@ -74535,13 +74539,13 @@ async function run() {
 
         try {
             // Generate a .flatpakrepo file
-            await generateDescription(repo);
+            await generateDescription(repository);
 
             // Copy extra files to the repository directory
-            await includeFiles(repo);
+            await includeFiles(repository);
 
             // Upload the repository directory as a Github Pages artifact
-            await uploadPagesArtifact(repo);
+            await uploadPagesArtifact(repository);
         } catch (e) {
             core.setFailed(`Failed to upload artifact: ${e.message}`);
         }
@@ -74562,7 +74566,7 @@ async function run() {
 
         for (const manifest of manifests) {
             try {
-                const filePath = await bundleApplication(repo,
+                const filePath = await bundleApplication(repository,
                     manifest);
                 const artifactName = filePath.replace('.flatpak',
                     `-${core.getInput('arch')}`);

@@ -13,8 +13,6 @@ import * as yaml from 'js-yaml';
 import { spawn } from 'child_process';
 import { homedir } from 'os';
 
-const DBUS_SOCKET = `${homedir()}/dbus.socket`
-
 
 export {
     buildApplication,
@@ -27,7 +25,10 @@ export {
 
 
 /**
- * Start a D-Bus session and return the process and address.
+ * Start a D-Bus session and return the child process.
+ *
+ * The returned object will have two additional properties, `address` and
+ * `socket`, holding the D-Bus address and socket file, respectively.
  *
  * @returns {Promise<ChildProcess>}
  */
@@ -36,13 +37,14 @@ function startDBusSession() {
         const dbus = spawn('dbus-daemon', [
             '--session',
             '--print-address',
-            `--address=unix:path=${DBUS_SOCKET}`,
+            `--address=unix:path=${homedir()}/dbus.socket`,
         ]);
 
         dbus.stdout.on('data', (data) => {
             try {
                 const decoder = new TextDecoder();
                 dbus.address = decoder.decode(data).trim();
+                dbus.socket = `${homedir()}/dbus.socket`;
 
                 resolve(dbus);
             } catch (e) {
@@ -174,9 +176,6 @@ async function buildApplication(directory, manifest) {
     if ((cacheKey = core.getInput('cache-key')) && cache.isFeatureAvailable()) {
         cacheKey = `${cacheKey}-${arch}-${checksum}`;
         cacheId = await cache.restoreCache([stateDir], cacheKey);
-
-        if (cacheId)
-            core.info(`Cache "${cacheId}" restored with key "${cacheKey}"`);
     }
 
     const builderArgs = [
@@ -246,53 +245,6 @@ async function bundleApplication(directory, manifest) {
  * @param {PathLike} manifest - A path to a Flatpak manifest
  */
 async function testApplication(directory, manifest) {
-    const dbusSession = await startDBusSession();
-    const testManifest = await readManifest(manifest);
-    const testSubject = testManifest['modules'].pop();
-    testSubject['run-tests'] = true;
-
-    // Test Environment
-    const buildOptions = testManifest['build-options'] || {};
-    testManifest['build-options'] = {
-        ...(buildOptions),
-        'env': {
-            ...(buildOptions['env'] || {}),
-            DBUS_SESSION_BUS_ADDRESS: dbusSession.address,
-            DISPLAY: '0:0',
-        },
-        'test-args': [
-            ...(buildOptions['test-args'] || []),
-            `--filesystem=${DBUS_SOCKET}`,
-            '--share=network',
-            '--socket=x11',
-        ],
-    };
-
-    // `meson setup` options
-    if (core.getInput('test-config-opts')) {
-        testSubject['config-opts'] = [
-            ...(testSubject['config-opts'] || []),
-            ...(core.getMultilineInput('test-config-opts')),
-        ];
-    }
-
-    // Set the module source to the current working directory
-    const testSubjectSources = testSubject['sources'].pop();
-    if (testSubjectSources) {
-        if (testSubjectSources['type'] === 'dir')
-            testSubject['sources'].push(testSubjectSources);
-        else
-            testSubject['sources'].push({ type: 'dir', path: process.cwd() });
-    }
-
-    // Prepend test dependencies
-    if (core.getInput('test-modules'))
-        testManifest['modules'].push(...core.getMultilineInput('test-modules'));
-    testManifest['modules'].push(testSubject);
-
-    await writeManifest(manifest, testManifest);
-
-    // Build Phase
     const arch = core.getInput('arch');
     const checksum = await checksumFile(manifest);
     const stateDir = `.flatpak-builder-${arch}-${checksum}`;
@@ -303,6 +255,56 @@ async function testApplication(directory, manifest) {
         cacheId = await cache.restoreCache([stateDir], cacheKey);
     }
 
+    /*
+     * Prepare the Flatpak manifest
+     */
+    const testManifest = await readManifest(manifest);
+    const testSubject = testManifest['modules'].pop();
+    testSubject['run-tests'] = true;
+
+    //
+    const dbusSession = await startDBusSession();
+    const buildOptions = testManifest['build-options'] || {};
+    testManifest['build-options'] = {
+        ...(buildOptions),
+        'env': {
+            ...(buildOptions['env'] || {}),
+            DBUS_SESSION_BUS_ADDRESS: dbusSession.address,
+            DISPLAY: '0:0',
+        },
+        'test-args': [
+            ...(buildOptions['test-args'] || []),
+            `--filesystem=${dbusSession.socket}`,
+            '--share=network',
+            '--socket=x11',
+        ],
+    };
+
+    // Extra command-line options for `meson setup`
+    if (core.getInput('test-config-opts')) {
+        testSubject['config-opts'] = [
+            ...(testSubject['config-opts'] || []),
+            ...(core.getMultilineInput('test-config-opts')),
+        ];
+    }
+
+    // Ensure the sources for the test subject are a directory
+    const testSubjectSources = testSubject['sources'].pop();
+    if (testSubjectSources) {
+        if (testSubjectSources['type'] === 'dir')
+            testSubject['sources'].push(testSubjectSources);
+        else
+            testSubject['sources'].push({ type: 'dir', path: process.cwd() });
+    }
+
+    // Ensure the test dependencies are built before the test subject
+    if (core.getInput('test-modules'))
+        testManifest['modules'].push(...core.getMultilineInput('test-modules'));
+    testManifest['modules'].push(testSubject);
+
+    await writeManifest(manifest, testManifest);
+
+    // Build Phase
     const builderArgs = [
         `--arch=${arch}`,
         '--ccache',
