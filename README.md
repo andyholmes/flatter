@@ -184,7 +184,7 @@ in a CI, then passed for distribution as a nightly build if successful.
 
 The `run-tests` input overrides the manifest field of the same name, instructing
 `flatpak-builder` to run `ninja test` once the project is built. If this input
-is `true`, the repository cache will not be updated.
+is `true`, the repository cache will not be used.
 
 The `test-config-opts` input is a list of extra options to pass to `meson setup`
 for the target application, used for options like `-Dtests=true`.
@@ -237,42 +237,14 @@ The following options are set internally for `flatpak build-bundle`:
 
 ## Outputs
 
-The only required input is `files`, which should be a list of paths to Flatpak
-manifests (JSON or YAML) to build.
+The only output is `repository`, currently.
 
 | Name                    | Description                                        |
 |-------------------------|----------------------------------------------------|
 | `repository`            | Absolute path to the Flatpak repository            |
 
-The `files` input may be either a single-line or multi-line string value:
-
-```yml
-# One manifest
-files: one.manifestFile.json
-
-# One or more manifests
-files: |
-  one.manifest.File.json
-  two.manifest.File.yml
-```
-
-The `arch` input must be set if building for a non-`x86-64` architecture, like
-`aarch64`. See [Multiple Architectures](#multiple-architectures) for more
-information.
-
-The `gpg-sign` input corresponds to the `--gpg-sign` command-line option and
-should be a GPG key fingerprint. See [GPG Signing](#gpg-signing) for more
-information.
-
-The `repository` output is an absolute path to the directory where the Flatpak
-repository was created, corresponding to the `--repo` command-line option. This directory is restored from
-cache before building the manifests and saved after, but left available in an
-ephemeral state for subsequent steps in the job. The directory can be found in
-`$GITHUB_WORKSPACE`.
-
-The `cache-key` input is used as a base to generate cache keys for the
-repository and build directories. The key can be rotated if the repository
-becomes too large or needs to be reset for some other reason.
+The `repository` output is an absolute path to the repository directory,
+corresponding to the `--repo` command-line option.
 
 ## Containers
 
