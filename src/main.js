@@ -31,7 +31,7 @@ async function run() {
     /*
      * Build the Flatpak manifests
      */
-    if (core.getInput('run-tests')) {
+    if (core.getBooleanInput('run-tests')) {
         for (const manifest of manifests) {
             core.startGroup(`Testing "${manifest}"...`);
 
