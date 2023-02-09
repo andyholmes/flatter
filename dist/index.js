@@ -74447,6 +74447,13 @@ async function saveCache(directory) {
  * @param {PathLike} directory - A path to a directory
  */
 async function uploadPagesArtifact(directory) {
+    await exec.exec('chmod', [
+        '--changes',
+        '--recursive',
+        '+rX',
+        directory,
+    ]);
+
     await exec.exec('tar', [
         '--dereference',
         '--hard-dereference',
