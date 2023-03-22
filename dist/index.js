@@ -74121,12 +74121,12 @@ async function checkManifest(manifestPath) {
 
     if (stdout.includes('OUTDATED')) {
         let output = stdout.replace('Has a new version:\n', '')
-            .replace(/^OUTDATED: (.*)$/gm, (match, module, offset, string) => {
+            .replace(/^OUTDATED: (.*)$/gm, (match, module) => {
                 return `#### \`${module}\`\n\n` +
                     `| Update | \`${module}\` |\n` +
                     '|--------|---------------|';
             })
-            .replace(/^ {2}([^:]*): +(.*)$/gm, (match, key, value, offset, string) => {
+            .replace(/^ {2}([^:]*): +(.*)$/gm, (match, key, value) => {
                 return `| ${key} | ${value} |`;
             });
         output = `### \`${external_path_.basename(manifestPath)}\`\n\n${output}`;
