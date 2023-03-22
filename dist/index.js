@@ -74110,6 +74110,34 @@ async function readManifest(manifestPath) {
 }
 
 /**
+ * Check a Flatpak manifest for outdated modules.
+ *
+ * @param {PathLike} manifestPath - A path to a Flatpak manifest
+ * @returns {boolean} - %false if outdated modules were found, otherwise %true
+ */
+async function checkManifest(manifestPath) {
+    let output = '';
+
+    await exec.exec('flatpak-external-data-checker', [manifestPath], {
+        listeners: {
+            stdout: (data) => {
+                output += data.toString();
+            },
+        },
+    });
+
+    if (output.includes('OUTDATED')) {
+        output = output.replace('OUTDATED', '#### OUTDATED');
+        output = `### \`${external_path_.basename(manifestPath)}\`\n\n${output}`;
+        await external_fs_.promises.appendFile(process.env.GITHUB_STEP_SUMMARY, output);
+
+        return false;
+    }
+
+    return true;
+}
+
+/**
  * Save a Flatpak manifest (JSON or YAML).
  *
  * @param {PathLike} manifestPath - A path to a Flatpak manifest
@@ -74508,6 +74536,15 @@ async function run() {
     if (core.getBooleanInput('run-tests')) {
         for (const manifest of manifests) {
             core.startGroup(`Testing "${manifest}"...`);
+
+            try {
+                const pass = await checkManifest(manifest);
+
+                if (!pass)
+                    core.debug(`Checking "${manifest}": out of date modules found`);
+            } catch (e) {
+                core.setFailed(`Checking "${manifest}": ${e.message}`);
+            }
 
             try {
                 await testApplication(repository, manifest);

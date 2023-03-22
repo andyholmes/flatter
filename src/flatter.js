@@ -17,6 +17,7 @@ import { homedir } from 'os';
 export {
     buildApplication,
     bundleApplication,
+    checkManifest,
     testApplication,
     generateDescription,
     restoreCache,
@@ -91,6 +92,34 @@ async function readManifest(manifestPath) {
         default:
             throw TypeError('Unsupported manifest format');
     }
+}
+
+/**
+ * Check a Flatpak manifest for outdated modules.
+ *
+ * @param {PathLike} manifestPath - A path to a Flatpak manifest
+ * @returns {boolean} - %false if outdated modules were found, otherwise %true
+ */
+async function checkManifest(manifestPath) {
+    let output = '';
+
+    await exec.exec('flatpak-external-data-checker', [manifestPath], {
+        listeners: {
+            stdout: (data) => {
+                output += data.toString();
+            },
+        },
+    });
+
+    if (output.includes('OUTDATED')) {
+        output = output.replace('OUTDATED', '#### OUTDATED');
+        output = `### \`${path.basename(manifestPath)}\`\n\n${output}`;
+        await fs.promises.appendFile(process.env.GITHUB_STEP_SUMMARY, output);
+
+        return false;
+    }
+
+    return true;
 }
 
 /**
