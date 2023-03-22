@@ -38,6 +38,15 @@ async function run() {
             core.startGroup(`Testing "${manifest}"...`);
 
             try {
+                const pass = await flatter.checkManifest(manifest);
+
+                if (!pass)
+                    core.debug(`Checking "${manifest}": out of date modules found`);
+            } catch (e) {
+                core.setFailed(`Checking "${manifest}": ${e.message}`);
+            }
+
+            try {
                 await flatter.testApplication(repository, manifest);
             } catch (e) {
                 core.setFailed(`Testing "${manifest}": ${e.message}`);
