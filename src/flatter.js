@@ -105,7 +105,7 @@ async function checkManifest(manifestPath) {
         [manifestPath]);
 
     if (stdout.includes('OUTDATED')) {
-        let output = stdout.replace('Has a new version:\n', '')
+        let output = stdout.replace(' Has a new version:\n', '')
             .replace(/^OUTDATED: (.*)$/gm, (match, module) => {
                 return `#### \`${module}\`\n\n` +
                     `| Update | \`${module}\` |\n` +
