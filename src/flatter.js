@@ -103,16 +103,19 @@ async function readManifest(manifestPath) {
 async function checkManifest(manifestPath) {
     let output = '';
 
-    await exec.exec('flatpak-external-data-checker', [manifestPath], {
-        listeners: {
-            stdout: (data) => {
-                output += data.toString();
-            },
-        },
-    });
+    const {stdout} = await exec.getExecOutput('flatpak-external-data-checker',
+        [manifestPath]);
 
     if (output.includes('OUTDATED')) {
-        output = output.replace('OUTDATED', '#### OUTDATED');
+        output = output.replace('Has a new version:\n', '')
+            .replace(/^OUTDATED: (.*)$/gm, (match, module, offset, string) => {
+                return `#### \`${module}\`\n\n` +
+                    `| Update | \`${module}\` |\n` +
+                    '|--------|---------------|';
+            })
+            .replace(/^ {2}([^:]*): +(.*)$/gm, (match, key, value, offset, string) => {
+                return `| ${key} | ${value} |`;
+            });
         output = `### \`${path.basename(manifestPath)}\`\n\n${output}`;
         await fs.promises.appendFile(process.env.GITHUB_STEP_SUMMARY, output);
 
