@@ -101,13 +101,11 @@ async function readManifest(manifestPath) {
  * @returns {boolean} - %false if outdated modules were found, otherwise %true
  */
 async function checkManifest(manifestPath) {
-    let output = '';
-
     const {stdout} = await exec.getExecOutput('flatpak-external-data-checker',
         [manifestPath]);
 
-    if (output.includes('OUTDATED')) {
-        output = output.replace('Has a new version:\n', '')
+    if (stdout.includes('OUTDATED')) {
+        let output = stdout.replace('Has a new version:\n', '')
             .replace(/^OUTDATED: (.*)$/gm, (match, module, offset, string) => {
                 return `#### \`${module}\`\n\n` +
                     `| Update | \`${module}\` |\n` +
