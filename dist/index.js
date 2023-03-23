@@ -74120,17 +74120,32 @@ async function checkManifest(manifestPath) {
         [manifestPath]);
 
     if (stdout.includes('OUTDATED')) {
-        let output = stdout.replace(' Has a new version:\n', '')
-            .replace(/^OUTDATED: (.*)$/gm, (match, module) => {
-                return `#### \`${module}\`\n\n` +
-                    `| Update | \`${module}\` |\n` +
-                    '|--------|---------------|';
-            })
-            .replace(/^ {2}([^:]*): +(.*)$/gm, (match, key, value) => {
-                return `| ${key} | ${value} |`;
-            });
-        output = `### \`${external_path_.basename(manifestPath)}\`\n\n${output}`;
-        await external_fs_.promises.appendFile(process.env.GITHUB_STEP_SUMMARY, output);
+        const lines = stdout?.split('\n') || [];
+
+        const md_lines = lines.reduce((accumulator, line) => {
+            let match = null;
+
+            if (line.includes('Has a new version'))
+                return accumulator;
+
+            if (line.trim().length === 0) {
+                accumulator.push('');
+            } else if ((match = line.match(/^OUTDATED: (.*)$/m)) != null) {
+                const module = match[1].split('.')[0];
+                accumulator.push(`#### \`${match[1]}\``);
+                accumulator.push('');
+                accumulator.push(`|  \`${module}\`  |                 |`);
+                accumulator.push('|-----------------|-----------------|');
+            } else if ((match = line.match(/^ {2}([^:]*): +(.*)$/m)) != null) {
+                accumulator.push(`| **${match[1]}** | \`${match[2]}\` |`);
+            }
+
+          return accumulator;
+        }, [`### \`${external_path_.basename(manifestPath)}\`\n\n`]);
+
+        const summary = external_path_.normalize(process.env.GITHUB_STEP_SUMMARY);
+        const md_text = md_lines.join('\n');
+        await external_fs_.promises.appendFile(summary, md_text);
 
         return false;
     }

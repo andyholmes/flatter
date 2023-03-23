@@ -105,17 +105,32 @@ async function checkManifest(manifestPath) {
         [manifestPath]);
 
     if (stdout.includes('OUTDATED')) {
-        let output = stdout.replace(' Has a new version:\n', '')
-            .replace(/^OUTDATED: (.*)$/gm, (match, module) => {
-                return `#### \`${module}\`\n\n` +
-                    `| Update | \`${module}\` |\n` +
-                    '|--------|---------------|';
-            })
-            .replace(/^ {2}([^:]*): +(.*)$/gm, (match, key, value) => {
-                return `| ${key} | ${value} |`;
-            });
-        output = `### \`${path.basename(manifestPath)}\`\n\n${output}`;
-        await fs.promises.appendFile(process.env.GITHUB_STEP_SUMMARY, output);
+        const lines = stdout?.split('\n') || [];
+
+        const md_lines = lines.reduce((accumulator, line) => {
+            let match = null;
+
+            if (line.includes('Has a new version'))
+                return accumulator;
+
+            if (line.trim().length === 0) {
+                accumulator.push('');
+            } else if ((match = line.match(/^OUTDATED: (.*)$/m)) != null) {
+                const module = match[1].split('.')[0];
+                accumulator.push(`#### \`${match[1]}\``);
+                accumulator.push('');
+                accumulator.push(`|  \`${module}\`  |                 |`);
+                accumulator.push('|-----------------|-----------------|');
+            } else if ((match = line.match(/^ {2}([^:]*): +(.*)$/m)) != null) {
+                accumulator.push(`| **${match[1]}** | \`${match[2]}\` |`);
+            }
+
+          return accumulator;
+        }, [`### \`${path.basename(manifestPath)}\`\n\n`]);
+
+        const summary = path.normalize(process.env.GITHUB_STEP_SUMMARY);
+        const md_text = md_lines.join('\n');
+        await fs.promises.appendFile(summary, md_text);
 
         return false;
     }
