@@ -74143,9 +74143,8 @@ async function checkManifest(manifestPath) {
           return accumulator;
         }, [`### \`${external_path_.basename(manifestPath)}\`\n\n`]);
 
-        const summary = external_path_.normalize(process.env.GITHUB_STEP_SUMMARY);
         const md_text = md_lines.join('\n');
-        await external_fs_.promises.appendFile(summary, md_text);
+        await external_fs_.promises.appendFile(core.summary, md_text);
 
         return false;
     }

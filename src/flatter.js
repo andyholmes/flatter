@@ -128,9 +128,8 @@ async function checkManifest(manifestPath) {
           return accumulator;
         }, [`### \`${path.basename(manifestPath)}\`\n\n`]);
 
-        const summary = path.normalize(process.env.GITHUB_STEP_SUMMARY);
         const md_text = md_lines.join('\n');
-        await fs.promises.appendFile(summary, md_text);
+        await fs.promises.appendFile(core.summary, md_text);
 
         return false;
     }
