@@ -17,7 +17,7 @@ import { homedir } from 'os';
 export {
     buildApplication,
     bundleApplication,
-    checkManifest,
+    checkApplication,
     testApplication,
     generateDescription,
     restoreCache,
@@ -92,49 +92,6 @@ async function readManifest(manifestPath) {
         default:
             throw TypeError('Unsupported manifest format');
     }
-}
-
-/**
- * Check a Flatpak manifest for outdated modules.
- *
- * @param {PathLike} manifestPath - A path to a Flatpak manifest
- * @returns {boolean} - %false if outdated modules were found, otherwise %true
- */
-async function checkManifest(manifestPath) {
-    const {stdout} = await exec.getExecOutput('flatpak-external-data-checker',
-        [manifestPath]);
-
-    if (stdout.includes('OUTDATED')) {
-        const lines = stdout?.split('\n') || [];
-
-        const md_lines = lines.reduce((accumulator, line) => {
-            let match = null;
-
-            if (line.includes('Has a new version'))
-                return accumulator;
-
-            if (line.trim().length === 0) {
-                accumulator.push('');
-            } else if ((match = line.match(/^OUTDATED: (.*)$/m)) != null) {
-                const module = match[1].split('.')[0];
-                accumulator.push(`#### \`${match[1]}\``);
-                accumulator.push('');
-                accumulator.push(`|  \`${module}\`  |                 |`);
-                accumulator.push('|-----------------|-----------------|');
-            } else if ((match = line.match(/^ {2}([^:]*): +(.*)$/m)) != null) {
-                accumulator.push(`| **${match[1]}** | \`${match[2]}\` |`);
-            }
-
-          return accumulator;
-        }, [`### \`${path.basename(manifestPath)}\`\n\n`]);
-
-        const md_text = md_lines.join('\n');
-        await fs.promises.appendFile(core.summary, md_text);
-
-        return false;
-    }
-
-    return true;
 }
 
 /**
@@ -281,6 +238,50 @@ async function bundleApplication(directory, manifest) {
     return fileName;
 }
 
+/**
+ * Check a Flatpak manifest.
+ *
+ * Currently this runs `flatpak-external-data-checker` on the manifest and
+ * appends markdown to the GitHub job summary.
+ *
+ * @param {PathLike} directory - A path to a Flatpak repository
+ * @param {PathLike} manifest - A path to a Flatpak manifest
+ * @returns {boolean} - %true if successful, or %false if otherwise
+ */
+async function checkApplication(_directory, manifest) {
+    const {stdout} = await exec.getExecOutput('flatpak-external-data-checker',
+        [manifest]);
+
+    if (stdout.includes('OUTDATED')) {
+        const lines = stdout?.split('\n') || [];
+        const md_lines = lines.reduce((accumulator, line) => {
+            let match = null;
+
+            if (line.includes('Has a new version'))
+                return accumulator;
+
+            if (line.trim().length === 0) {
+                accumulator.push('');
+            } else if ((match = line.match(/^OUTDATED: (.*)$/m)) != null) {
+                const module = match[1].split('.')[0];
+                accumulator.push(`#### \`${match[1]}\``);
+                accumulator.push('');
+                accumulator.push(`|  \`${module}\`  |                 |`);
+                accumulator.push('|-----------------|-----------------|');
+            } else if ((match = line.match(/^ {2}([^:]*): +(.*)$/m)) != null) {
+                accumulator.push(`| **${match[1]}** | \`${match[2]}\` |`);
+            }
+
+          return accumulator;
+        }, [`### \`${path.basename(manifest)}\`\n\n`]);
+
+        await fs.promises.appendFile(core.summary, md_lines.join('\n'));
+
+        return false;
+    }
+
+    return true;
+}
 
 /**
  * Build a Flatpak application for testing.
