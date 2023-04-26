@@ -74310,8 +74310,9 @@ async function testApplication(directory, manifest) {
     const checksum = await checksumFile(manifest);
     const stateDir = `.flatpak-builder-${arch}-${checksum}`;
 
-    let cacheId, cacheKey;
-    if ((cacheKey = core.getInput('cache-key')) && cache.isFeatureAvailable()) {
+    let cacheId = core.getInput('cache-key');
+    let cacheKey = core.getInput('cache-key');
+    if (cacheKey && cache.isFeatureAvailable()) {
         cacheKey = `${cacheKey}-${arch}-${checksum}`;
         cacheId = await cache.restoreCache([stateDir], cacheKey);
     }
@@ -74389,7 +74390,8 @@ async function testApplication(directory, manifest) {
         dbusSession.kill();
     }
 
-    if (!cacheId?.localeCompare(cacheKey, undefined, { sensitivity: 'accent' }))
+    // If the key and ID match, the cache is disabled or already saved
+    if (!!cacheId.localeCompare(cacheKey, undefined, { sensitivity: 'accent' }))
         await cache.saveCache([stateDir], cacheKey);
 }
 
