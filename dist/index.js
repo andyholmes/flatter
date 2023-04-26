@@ -74290,7 +74290,8 @@ async function checkApplication(_directory, manifest) {
           return accumulator;
         }, [`### \`${external_path_.basename(manifest)}\`\n\n`]);
 
-        await external_fs_.promises.appendFile(core.summary, md_lines.join('\n'));
+        core.summary.addRaw(md_lines.join('\n'));
+        await core.summary.write();
 
         return false;
     }
