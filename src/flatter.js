@@ -275,7 +275,8 @@ async function checkApplication(_directory, manifest) {
           return accumulator;
         }, [`### \`${path.basename(manifest)}\`\n\n`]);
 
-        await fs.promises.appendFile(core.summary, md_lines.join('\n'));
+        core.summary.addRaw(md_lines.join('\n'));
+        await core.summary.write();
 
         return false;
     }
