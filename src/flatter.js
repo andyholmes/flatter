@@ -143,7 +143,19 @@ async function generateDescription(directory) {
     if (core.getInput('gpg-sign')) {
         const {stdout} = await exec.getExecOutput('gpg2',
             ['--armor', '--export', core.getInput('gpg-sign')]);
-        const publicKey = stdout.split('\n').slice(2, -2).join('');
+        /*
+         * Regex info:
+         * -{5}BEGIN.*-{5}
+         * ^ public key BEGIN header
+         * ([\w\s/+=]*)
+         * ^ capture the key (capture group 1)
+         * \s=[\w\s/+=]*
+         * ^ ignore the key checksum
+         * -{5}END.*-{5}
+         * ^ public key END header
+         */
+        const regex = /-{5}BEGIN.*-{5}([\w\s/+=]*)\s=[\w\s/+=]*-{5}END.*-{5}/;
+        const publicKey = stdout.match(regex)[1].split('\n').join('');
         metadata['GPGKey'] = publicKey;
     }
 
