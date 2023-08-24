@@ -43,7 +43,7 @@ jobs:
     name: Flatter
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/andyholmes/flatter/gnome:43
+      image: ghcr.io/andyholmes/flatter/gnome:44
       options: --privileged
 
     strategy:
@@ -247,19 +247,20 @@ The `repository` output is an absolute path to the repository directory,
 corresponding to the `--repo` command-line option.
 
 ## Containers
+> Feel free to open pull request for additional runtimes
 
 Flatter provides containers with pre-installed runtimes for several platforms,
 built from the base [`Dockerfile`](Dockerfile):
 
 | Image Name    | Version Tags                           | Architectures       |
 |---------------|----------------------------------------|---------------------|
-| `freedesktop` | `21.08`, `22.08`                       | `x86_64`, `aarch64` |
-| `gnome`       | `42`, `43`, `master`                   | `x86_64`, `aarch64` |
-| `kde`         | `5.15-21.08`, `5.15-22.08`             | `x86_64`, `aarch64` |
-| `elementary`  | `juno-20.08`                           | `x86_64`            |
+| `freedesktop` | `22.08`                                | `x86_64`, `aarch64` |
+| `gnome`       | `44`, `45`, `master`                   | `x86_64`, `aarch64` |
+| `kde`         | `5.15-22.08`                           | `x86_64`, `aarch64` |
+| `elementary`  | `juno-22.08`                           | `x86_64`            |
 
 Containers are referenced in the form `ghcr.io/andyholmes/flatter/<image>:<tag>`,
-such as `ghcr.io/andyholmes/flatter/gnome:43`:
+such as `ghcr.io/andyholmes/flatter/gnome:44`:
 
 ```yml
 name: Flatter
@@ -275,7 +276,7 @@ jobs:
     name: Flatter
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/andyholmes/flatter/gnome:43
+      image: ghcr.io/andyholmes/flatter/gnome:44
       options: --privileged
 ```
 
@@ -313,7 +314,7 @@ jobs:
     name: Flatter
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/andyholmes/flatter/gnome:43
+      image: ghcr.io/andyholmes/flatter/gnome:44
       options: --privileged
 
     steps:
@@ -378,7 +379,7 @@ jobs:
     name: Flatter
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/andyholmes/flatter/gnome:43
+      image: ghcr.io/andyholmes/flatter/gnome:44
       options: --privileged
 
     steps:
@@ -434,7 +435,7 @@ jobs:
     name: Flatter
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/andyholmes/flatter/gnome:43
+      image: ghcr.io/andyholmes/flatter/gnome:44
       options: --privileged
     permissions:
       contents: write
@@ -483,7 +484,7 @@ jobs:
     name: Flatter
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/andyholmes/flatter/gnome:43
+      image: ghcr.io/andyholmes/flatter/gnome:44
       options: --privileged
 
     # A matrix can be used, but must set `max-parallel: 1`

@@ -29,18 +29,8 @@ jobs:
       matrix:
         runtime:
           - name: freedesktop
-            tag: 21.08
-            packages: org.freedesktop.Platform/x86_64/21.08 org.freedesktop.Sdk/x86_64/21.08 org.freedesktop.Platform/aarch64/21.08 org.freedesktop.Sdk/aarch64/21.08
-            remote: flathub
-
-          - name: freedesktop
             tag: 22.08
             packages: org.freedesktop.Platform/x86_64/22.08 org.freedesktop.Sdk/x86_64/22.08 org.freedesktop.Platform/aarch64/22.08 org.freedesktop.Sdk/aarch64/22.08
-            remote: flathub
-
-          - name: gnome
-            tag: 43
-            packages: org.gnome.Platform/x86_64/43 org.gnome.Sdk/x86_64/43 org.gnome.Platform/aarch64/43 org.gnome.Sdk/aarch64/43
             remote: flathub
 
           - name: gnome
@@ -59,18 +49,13 @@ jobs:
             remote: gnome-nightly
 
           - name: kde
-            tag: 5.15-21.08
-            packages: org.kde.Platform/x86_64/5.15-21.08 org.kde.Sdk/x86_64/5.15-21.08 org.kde.Platform/aarch64/5.15-21.08 org.kde.Sdk/aarch64/5.15-21.08
-            remote: flathub
-
-          - name: kde
             tag: 5.15-22.08
             packages: org.kde.Platform/x86_64/5.15-22.08 org.kde.Sdk/x86_64/5.15-22.08 org.kde.Platform/aarch64/5.15-22.08 org.kde.Sdk/aarch64/5.15-22.08
             remote: flathub
 
           - name: elementary
-            tag: juno-20.08
-            packages: io.elementary.BaseApp//juno-20.08 org.gnome.Platform//3.38 org.gnome.Sdk//3.38
+            tag: juno-22.08
+            packages: io.elementary.BaseApp//juno-22.08 org.freedesktop.Platform//22.08 org.freedesktop.Sdk//22.08
             remote: flathub
       fail-fast: false
 
