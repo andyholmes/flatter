@@ -41,7 +41,7 @@ jobs:
           - name: gnome
             tag: 45
             packages: org.gnome.Platform/x86_64/45beta org.gnome.Sdk/x86_64/45beta org.gnome.Platform/aarch64/45beta org.gnome.Sdk/aarch64/45beta
-            remote: flathub
+            remote: flathub-beta
 
           - name: gnome
             tag: master
