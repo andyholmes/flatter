@@ -62,7 +62,7 @@ jobs:
       - name: Setup QEMU
         if: ${{ matrix.arch == 'aarch64' }}
         id: qemu
-        uses: docker/setup-qemu-action@v2
+        uses: docker/setup-qemu-action@v3
         with:
           platforms: arm64
 
@@ -503,7 +503,7 @@ jobs:
       - name: Setup QEMU
         if: ${{ matrix.arch == 'aarch64' }}
         id: qemu
-        uses: docker/setup-qemu-action@v2
+        uses: docker/setup-qemu-action@v3
         with:
           platforms: arm64
 
