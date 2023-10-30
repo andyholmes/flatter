@@ -112,4 +112,4 @@ jobs:
           context: .
           file: ${{ matrix.runtime.name }}.Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ghcr.io/andyholmes/flatter/${{ matrix.runtime.name }}:${{ matrix.runtime.tag }}
+          tags: ghcr.io/${{ github.repository }}/${{ matrix.runtime.name }}:${{ matrix.runtime.tag }}
