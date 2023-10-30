@@ -254,7 +254,7 @@ built from the base [`Dockerfile`](Dockerfile):
 
 | Image Name    | Version Tags                           | Architectures       |
 |---------------|----------------------------------------|---------------------|
-| `freedesktop` | `22.08`                                | `x86_64`, `aarch64` |
+| `freedesktop` | `22.08`, `23.08`                       | `x86_64`, `aarch64` |
 | `gnome`       | `44`, `45`, `master`                   | `x86_64`, `aarch64` |
 | `kde`         | `5.15-22.08`                           | `x86_64`, `aarch64` |
 | `elementary`  | `juno-22.08`                           | `x86_64`            |
