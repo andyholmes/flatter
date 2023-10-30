@@ -66,6 +66,16 @@ async function run() {
             core.endGroup();
         }
 
+        core.startGroup(`Updating metadata for repository "${repository}"...`);
+
+        try {
+            await flatter.updateRepositoryMetadata(repository);
+        } catch (e) {
+            core.setFailed(`Failed to update metadata for repository "${repository}": ${e.message}`);
+        }
+
+        core.endGroup();
+
         await flatter.saveCache(repository);
     }
 
@@ -126,4 +136,4 @@ async function run() {
 run();
 
 export default run;
-    
+

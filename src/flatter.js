@@ -20,6 +20,7 @@ export {
     checkApplication,
     testApplication,
     generateDescription,
+    updateRepositoryMetadata,
     restoreCache,
     saveCache,
 };
@@ -167,6 +168,26 @@ async function generateDescription(directory) {
         fileData.push(`${key}=${value}`);
 
     await fs.promises.writeFile(filePath, fileData.join('\n'));
+}
+
+
+/**
+ * Updates repository metadata.
+ *
+ * @param {PathLike} directory - A path to a Flatpak repository
+ * @returns {Promise<>} A promise for the operation
+ */
+async function updateRepositoryMetadata(directory) {
+    const updateArgs = [];
+
+    if (core.getInput('gpg-sign'))
+        updateArgs.push(`--gpg-sign=${core.getInput('gpg-sign')}`);
+
+    await exec.exec('flatpak', [
+        'build-update-repo',
+        ...updateArgs,
+        directory,
+    ]);
 }
 
 
