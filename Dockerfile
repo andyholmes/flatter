@@ -18,7 +18,7 @@ RUN dnf install -y 'dnf-command(copr)' && \
                    flatpak-builder \
                    git \
                    git-lfs \
-                   python3-{aiohttp,apt,editorconfig,github,gobject,jsonschema,lxml,packaging,pyelftools,ruamel-yaml,semver,toml} \
+                   python3-{aiohttp,apt,editorconfig,github,gobject,jsonschema,lxml,magic,packaging,pyelftools,ruamel-yaml,semver,toml} \
                    rsync \
                    xorg-x11-server-Xvfb \
                    zstd && \
