@@ -113,7 +113,7 @@ async function run() {
     if (core.getBooleanInput('upload-bundles')) {
         core.startGroup('Uploading Flatpak bundles...');
 
-        const artifactClient = artifact.create();
+        const artifactClient = new artifact.DefaultArtifactClient();
 
         for (const manifest of manifests) {
             try {
@@ -122,8 +122,7 @@ async function run() {
                 const artifactName = filePath.replace('.flatpak',
                     `-${core.getInput('arch')}`);
 
-                await artifactClient.uploadArtifact(artifactName, [filePath],
-                    '.', { continueOnError: false });
+                await artifactClient.uploadArtifact(artifactName, [filePath], '.');
             } catch (e) {
                 core.setFailed(`Failed to bundle "${manifest}": ${e.message}`);
             }

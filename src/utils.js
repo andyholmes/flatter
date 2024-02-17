@@ -33,7 +33,7 @@ async function uploadPagesArtifact(directory) {
         '.',
     ]);
 
-    const artifactClient = artifact.create();
+    const artifactClient = new artifact.DefaultArtifactClient();
     await artifactClient.uploadArtifact('github-pages', ['artifact.tar'], '.');
 }
 
