@@ -29,7 +29,6 @@ async function run() {
     const repository = `${process.cwd()}/repo`;
     core.setOutput('repository', repository);
 
-
     /*
      * Build the Flatpak manifests
      */
@@ -82,6 +81,27 @@ async function run() {
     if (process.exitCode === core.ExitCode.Failure)
         return;
 
+
+    /*
+     * Generate flatpakrepo
+     */
+    if (core.getBooleanInput('generate-flatpakrepo') || core.getBooleanInput('upload-pages-artifact')) {
+        core.startGroup('Generate flatpakrepo...');
+
+        try {
+            // Generate a .flatpakrepo file
+            await flatter.generateDescription(repository);
+
+        } catch (e) {
+            core.setFailed(`Failed to generate artifact: ${e.message}`);
+        }
+
+        core.endGroup();
+
+        if (process.exitCode === core.ExitCode.Failure)
+            return;
+    }
+
     /*
      * GitHub Pages Artifact
      */
@@ -89,9 +109,6 @@ async function run() {
         core.startGroup('Uploading GitHub Pages artifact...');
 
         try {
-            // Generate a .flatpakrepo file
-            await flatter.generateDescription(repository);
-
             // Copy extra files to the repository directory
             await includeFiles(repository);
 

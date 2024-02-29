@@ -33,6 +33,11 @@ inputs:
       Upload each application as an artifact.
     default: false
     required: false
+  generate-flatpakrepo:
+    description: >
+      Generate a flatpakrepo file for a self-hosted repo.
+    default: false
+    required: false
   upload-pages-artifact:
     description: >
       Upload the repository as a GitHub Pages artifact.
