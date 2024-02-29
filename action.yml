@@ -38,6 +38,10 @@ inputs:
       Generate a flatpakrepo file for a self-hosted repo.
     default: false
     required: false
+  flatpakrepo-title:
+    description: >
+      Title of the self-hosted repo
+    required: false
   flatpakrepo-url:
     description: >
       Url to the self-hosted repo

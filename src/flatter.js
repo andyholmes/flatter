@@ -129,11 +129,11 @@ async function generateDescription(directory) {
     const {repository} = github.context.payload;
 
     const metadata = {
-        Title: repository.name,
+        Title: core.getInput('flatpakrepo-title') || repository.name,
         Description: repository.description,
         Url: core.getInput('flatpakrepo-url') || `https://${repository.owner.login}.github.io/${repository.name}`,
         Homepage: repository.homepage || repository.html_url,
-        Icon: core.getInput('flatpakrepo-icon') || 'https://raw.githubusercontent.com/flatpak/flatpak/main/flatpak.png',
+        Icon: core.getInput('flatpakrepo.icon') || 'https://raw.githubusercontent.com/flatpak/flatpak/main/flatpak.png',
     };
 
     /* Append the GPG Public Key */
