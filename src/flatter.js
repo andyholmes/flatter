@@ -9,20 +9,16 @@ import * as cache from '@actions/cache';
 import * as core from '@actions/core';
 import * as exec from '@actions/exec';
 import * as github from '@actions/github';
-import * as yaml from 'js-yaml';
 import { spawn } from 'child_process';
+import * as yaml from 'js-yaml';
 import { homedir } from 'os';
 
 
 export {
     buildApplication,
     bundleApplication,
-    checkApplication,
-    testApplication,
-    generateDescription,
-    updateRepositoryMetadata,
-    restoreCache,
-    saveCache,
+    checkApplication, generateDescription, restoreCache,
+    saveCache, testApplication, updateRepositoryMetadata
 };
 
 
@@ -135,9 +131,9 @@ async function generateDescription(directory) {
     const metadata = {
         Title: repository.name,
         Description: repository.description,
-        Url: `https://${repository.owner.login}.github.io/${repository.name}`,
+        Url: core.getInput('flatpakrepo-url') || `https://${repository.owner.login}.github.io/${repository.name}`,
         Homepage: repository.homepage || repository.html_url,
-        Icon: 'https://raw.githubusercontent.com/flatpak/flatpak/main/flatpak.png',
+        Icon: core.getInput('flatpakrepo-icon') || 'https://raw.githubusercontent.com/flatpak/flatpak/main/flatpak.png',
     };
 
     /* Append the GPG Public Key */

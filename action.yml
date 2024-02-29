@@ -38,6 +38,14 @@ inputs:
       Generate a flatpakrepo file for a self-hosted repo.
     default: false
     required: false
+  flatpakrepo-url:
+    description: >
+      Url to the self-hosted repo
+    required: false
+  flatpakrepo-icon:
+    description: >
+      Url for the self-hosted repo icon
+    required: false
   upload-pages-artifact:
     description: >
       Upload the repository as a GitHub Pages artifact.
