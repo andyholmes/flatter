@@ -2,7 +2,7 @@
 app-id: ca.andyholmes.Flatter
 branch: nightly
 runtime: org.gnome.Platform
-runtime-version: "43"
+runtime-version: "46"
 sdk: org.gnome.Sdk
 command: flatter
 finish-args:
