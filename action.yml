@@ -68,5 +68,5 @@ inputs:
       Extra command-line options for `flatpak build-bundle`.
     required: false
 runs:
-  using: node16
+  using: node20
   main: dist/index.js
