@@ -53,6 +53,16 @@ jobs:
             packages: org.gnome.Platform/x86_64/master org.gnome.Sdk/x86_64/master org.gnome.Platform/aarch64/master org.gnome.Sdk/aarch64/master
             remote: gnome-nightly
 
+          - name: gnome-rust
+            tag: 45
+            packages: org.freedesktop.Sdk.Extension.llvm17/x86_64/23.08 org.freedesktop.Sdk.Extension.rust-stable/x86_64/23.08 org.gnome.Platform/x86_64/45 org.gnome.Sdk/x86_64/45 org.freedesktop.Sdk.Extension.llvm17/aarch64/23.08 org.freedesktop.Sdk.Extension.rust-stable/aarch64/23.08 org.gnome.Platform/aarch64/45 org.gnome.Sdk/aarch64/45
+            remote: flathub
+
+          - name: gnome-rust
+            tag: 46
+            packages: org.freedesktop.Sdk.Extension.llvm17/x86_64/23.08 org.freedesktop.Sdk.Extension.rust-stable/x86_64/23.08 org.gnome.Platform/x86_64/46 org.gnome.Sdk/x86_64/46 org.freedesktop.Sdk.Extension.llvm17/aarch64/23.08 org.freedesktop.Sdk.Extension.rust-stable/aarch64/23.08 org.gnome.Platform/aarch64/46 org.gnome.Sdk/aarch64/46
+            remote: flathub
+
           - name: kde
             tag: 5.15-22.08
             packages: org.kde.Platform/x86_64/5.15-22.08 org.kde.Sdk/x86_64/5.15-22.08 org.kde.Platform/aarch64/5.15-22.08 org.kde.Sdk/aarch64/5.15-22.08
