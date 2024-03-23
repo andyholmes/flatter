@@ -39,11 +39,6 @@ jobs:
             remote: flathub
 
           - name: gnome
-            tag: 44
-            packages: org.gnome.Platform/x86_64/44 org.gnome.Sdk/x86_64/44 org.gnome.Platform/aarch64/44 org.gnome.Sdk/aarch64/44
-            remote: flathub
-
-          - name: gnome
             tag: 45
             packages: org.gnome.Platform/x86_64/45 org.gnome.Sdk/x86_64/45 org.gnome.Platform/aarch64/45 org.gnome.Sdk/aarch64/45
             remote: flathub
