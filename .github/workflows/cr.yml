@@ -38,6 +38,11 @@ jobs:
             packages: org.freedesktop.Platform/x86_64/23.08 org.freedesktop.Sdk/x86_64/23.08 org.freedesktop.Platform/aarch64/23.08 org.freedesktop.Sdk/aarch64/23.08
             remote: flathub
 
+          - name: rust
+            tag: 23.08
+            packages: org.freedesktop.Sdk.Extension.llvm17/x86_64/23.08 org.freedesktop.Sdk.Extension.rust-stable/x86_64/23.08 org.freedesktop.Sdk.Extension.llvm17/aarch64/23.08 org.freedesktop.Sdk.Extension.rust-stable/aarch64/23.08
+            remote: flathub
+
           - name: gnome
             tag: 45
             packages: org.gnome.Platform/x86_64/45 org.gnome.Sdk/x86_64/45 org.gnome.Platform/aarch64/45 org.gnome.Sdk/aarch64/45
