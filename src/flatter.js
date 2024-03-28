@@ -409,7 +409,7 @@ async function testApplication(directory, manifest) {
     }
 
     // If the key and ID match, the cache is disabled or already saved
-    if (!!cacheId.localeCompare(cacheKey, undefined, { sensitivity: 'accent' }))
+    if (!!cacheId?.localeCompare(cacheKey, undefined, { sensitivity: 'accent' }))
         await cache.saveCache([stateDir], cacheKey);
 }
 
