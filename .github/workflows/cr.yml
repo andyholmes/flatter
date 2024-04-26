@@ -92,7 +92,7 @@ jobs:
           - name: workbench
             tag: master
             packages: org.freedesktop.Sdk.Extension.llvm16/x86_64/23.08 org.freedesktop.Sdk.Extension.node18/x86_64/23.08 org.freedesktop.Sdk.Extension.typescript/x86_64/23.08 org.freedesktop.Sdk.Extension.rust-stable/x86_64/23.08 org.freedesktop.Sdk.Extension.vala/x86_64/23.08 org.gnome.Platform/x86_64/master org.gnome.Sdk/x86_64/master org.freedesktop.Sdk.Extension.llvm16/aarch64/23.08 org.freedesktop.Sdk.Extension.node18/aarch64/23.08 org.freedesktop.Sdk.Extension.typescript/aarch64/23.08 org.freedesktop.Sdk.Extension.rust-stable/aarch64/23.08 org.freedesktop.Sdk.Extension.vala/aarch64/23.08 org.gnome.Platform/aarch64/master org.gnome.Sdk/aarch64/master
-            remote: flathub
+            remote: gnome-nightly
 
           # KDE
           #
