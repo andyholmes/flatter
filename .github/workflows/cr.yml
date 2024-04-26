@@ -85,6 +85,15 @@ jobs:
             packages: org.freedesktop.Sdk.Extension.llvm17/x86_64/23.08 org.freedesktop.Sdk.Extension.rust-stable/x86_64/23.08 org.gnome.Platform/x86_64/46 org.gnome.Sdk/x86_64/46 org.freedesktop.Sdk.Extension.llvm17/aarch64/23.08 org.freedesktop.Sdk.Extension.rust-stable/aarch64/23.08 org.gnome.Platform/aarch64/46 org.gnome.Sdk/aarch64/46
             remote: flathub
 
+          # Workbench
+          #
+          # This is a special image for Workbench, that includes quite a few
+          # language extensions.
+          - name: workbench
+            tag: 46
+            packages: org.freedesktop.Sdk.Extension.llvm16/x86_64/23.08 org.freedesktop.Sdk.Extension.node18/x86_64/23.08 org.freedesktop.Sdk.Extension.typescript/x86_64/23.08 org.freedesktop.Sdk.Extension.rust-stable/x86_64/23.08 org.freedesktop.Sdk.Extension.vala/x86_64/23.08 org.gnome.Platform/x86_64/46 org.gnome.Sdk/x86_64/46 org.freedesktop.Sdk.Extension.llvm16/aarch64/23.08 org.freedesktop.Sdk.Extension.node18/aarch64/23.08 org.freedesktop.Sdk.Extension.typescript/aarch64/23.08 org.freedesktop.Sdk.Extension.rust-stable/aarch64/23.08 org.freedesktop.Sdk.Extension.vala/aarch64/23.08 org.gnome.Platform/aarch64/46 org.gnome.Sdk/aarch64/46
+            remote: flathub
+
           # KDE
           #
           # These are images for the KDE runtime. The maintainer doesn't use
