@@ -119,7 +119,7 @@ jobs:
             ${{ runner.os }}-buildx-
 
       - name: Build Base Image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
@@ -139,7 +139,7 @@ jobs:
           EOF
 
       - name: Build
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           allow: security.insecure
           context: .
