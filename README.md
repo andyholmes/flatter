@@ -43,7 +43,7 @@ jobs:
     name: Flatter
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/andyholmes/flatter/gnome:44
+      image: ghcr.io/andyholmes/flatter/gnome:46
       options: --privileged
 
     strategy:
@@ -252,15 +252,23 @@ corresponding to the `--repo` command-line option.
 Flatter provides containers with pre-installed runtimes for several platforms,
 built from the base [`Dockerfile`](Dockerfile):
 
-| Image Name    | Version Tags                           | Architectures       |
-|---------------|----------------------------------------|---------------------|
-| `freedesktop` | `22.08`, `23.08`                       | `x86_64`, `aarch64` |
-| `gnome`       | `44`, `45`, `master`                   | `x86_64`, `aarch64` |
-| `kde`         | `5.15-22.08`                           | `x86_64`, `aarch64` |
-| `elementary`  | `juno-22.08`                           | `x86_64`            |
+| Image Name               | Version Tags                | Architectures       |
+|--------------------------|-----------------------------|---------------------|
+| `freedesktop`            | `22.08`, `23.08`            | `x86_64`, `aarch64` |
+| `rust`                   | `23.08`                     | `x86_64`, `aarch64` |
+| `elementary`             | `juno-22.08`                | `x86_64`            |
+| `gnome`                  | `45`, `46`, `master`        | `x86_64`, `aarch64` |
+| `gnome-rust`             | `45`, `46`                  | `x86_64`, `aarch64` |
+| `gnome-typescript`       | `46`                        | `x86_64`, `aarch64` |
+| `gnome-vala`             | `46`                        | `x86_64`, `aarch64` |
+| `workbench`<sup>1</sup>  | `master`                    | `x86_64`, `aarch64` |
+| `kde`                    | `5.15-23.08`                | `x86_64`, `aarch64` |
+
+<sup>**1** This is custom container for Workbench, based on GNOME Nightly with
+many language extensions installed by default.</sup>
 
 Containers are referenced in the form `ghcr.io/andyholmes/flatter/<image>:<tag>`,
-such as `ghcr.io/andyholmes/flatter/gnome:44`:
+such as `ghcr.io/andyholmes/flatter/gnome:46`:
 
 ```yml
 name: Flatter
@@ -276,7 +284,7 @@ jobs:
     name: Flatter
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/andyholmes/flatter/gnome:44
+      image: ghcr.io/andyholmes/flatter/gnome:46
       options: --privileged
 ```
 
@@ -314,7 +322,7 @@ jobs:
     name: Flatter
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/andyholmes/flatter/gnome:44
+      image: ghcr.io/andyholmes/flatter/gnome:46
       options: --privileged
 
     steps:
@@ -379,7 +387,7 @@ jobs:
     name: Flatter
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/andyholmes/flatter/gnome:44
+      image: ghcr.io/andyholmes/flatter/gnome:46
       options: --privileged
 
     steps:
@@ -435,7 +443,7 @@ jobs:
     name: Flatter
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/andyholmes/flatter/gnome:44
+      image: ghcr.io/andyholmes/flatter/gnome:46
       options: --privileged
     permissions:
       contents: write
@@ -484,7 +492,7 @@ jobs:
     name: Flatter
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/andyholmes/flatter/gnome:44
+      image: ghcr.io/andyholmes/flatter/gnome:46
       options: --privileged
 
     # A matrix can be used, but must set `max-parallel: 1`
