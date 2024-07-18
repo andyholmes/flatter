@@ -65,12 +65,8 @@ jobs:
             flathub: >
               org.freedesktop.Platform/x86_64/23.08
               org.freedesktop.Sdk/x86_64/23.08
-              org.freedesktop.Platform/aarch64/23.08
-              org.freedesktop.Sdk/aarch64/23.08
               org.freedesktop.Sdk.Extension.llvm17/x86_64/23.08
               org.freedesktop.Sdk.Extension.rust-nightly/x86_64/23.08
-              org.freedesktop.Sdk.Extension.llvm17/aarch64/23.08
-              org.freedesktop.Sdk.Extension.rust-nightly/aarch64/23.08
 
           # elementaryOS
           #
