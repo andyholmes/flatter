@@ -255,7 +255,7 @@ built from the base [`Dockerfile`](Dockerfile):
 | Image Name               | Version Tags                | Architectures       |
 |--------------------------|-----------------------------|---------------------|
 | `freedesktop`            | `22.08`, `23.08`            | `x86_64`, `aarch64` |
-| `rust`                   | `23.08`                     | `x86_64`, `aarch64` |
+| `rust`                   | `23.08`, `nightly`          | `x86_64`, `aarch64` |
 | `elementary`             | `juno-22.08`                | `x86_64`            |
 | `gnome`                  | `45`, `46`, `master`        | `x86_64`, `aarch64` |
 | `gnome-rust`             | `45`, `46`                  | `x86_64`, `aarch64` |
