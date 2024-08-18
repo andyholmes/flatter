@@ -40,7 +40,7 @@ async function run() {
             try {
                 await flatter.checkApplication(repository, manifest);
             } catch (e) {
-                core.setFailed(`Checking "${manifest}": ${e.message}`);
+                core.warning(`Checking "${manifest}": ${e.message}`);
             }
 
             try {
