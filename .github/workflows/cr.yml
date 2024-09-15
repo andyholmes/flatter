@@ -68,17 +68,6 @@ jobs:
               org.freedesktop.Sdk.Extension.llvm17/x86_64/23.08
               org.freedesktop.Sdk.Extension.rust-nightly/x86_64/23.08
 
-          # elementaryOS
-          #
-          # These are images for the elementaryOS runtime. The maintainer
-          # doesn't use these, but feel free to open a PR if out-of-date.
-          - name: elementary
-            tag: juno-22.08
-            flathub: >
-              io.elementary.BaseApp//juno-22.08
-              org.freedesktop.Platform//22.08
-              org.freedesktop.Sdk//22.08
-
           # GNOME
           #
           # These are images for the GNOME runtime, and those that add a few
