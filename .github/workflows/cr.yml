@@ -33,20 +33,20 @@ jobs:
           # These are images for the freedesktop.org runtime, and those that
           # add a few packages to support additional languages and so on.
           - name: freedesktop
-            tag: 22.08
-            flathub: >
-              org.freedesktop.Platform/x86_64/22.08
-              org.freedesktop.Sdk/x86_64/22.08
-              org.freedesktop.Platform/aarch64/22.08
-              org.freedesktop.Sdk/aarch64/22.08
-
-          - name: freedesktop
             tag: 23.08
             flathub: >
               org.freedesktop.Platform/x86_64/23.08
               org.freedesktop.Sdk/x86_64/23.08
               org.freedesktop.Platform/aarch64/23.08
               org.freedesktop.Sdk/aarch64/23.08
+
+          - name: freedesktop
+            tag: 24.08
+            flathub: >
+              org.freedesktop.Platform/x86_64/24.08
+              org.freedesktop.Sdk/x86_64/24.08
+              org.freedesktop.Platform/aarch64/24.08
+              org.freedesktop.Sdk/aarch64/24.08
 
           - name: rust
             tag: 23.08
@@ -61,12 +61,16 @@ jobs:
               org.freedesktop.Sdk.Extension.rust-stable/aarch64/23.08
 
           - name: rust
-            tag: nightly
+            tag: 24.08
             flathub: >
-              org.freedesktop.Platform/x86_64/23.08
-              org.freedesktop.Sdk/x86_64/23.08
-              org.freedesktop.Sdk.Extension.llvm17/x86_64/23.08
-              org.freedesktop.Sdk.Extension.rust-nightly/x86_64/23.08
+              org.freedesktop.Platform/x86_64/24.08
+              org.freedesktop.Sdk/x86_64/24.08
+              org.freedesktop.Platform/aarch64/24.08
+              org.freedesktop.Sdk/aarch64/24.08
+              org.freedesktop.Sdk.Extension.llvm18/x86_64/24.08
+              org.freedesktop.Sdk.Extension.rust-stable/x86_64/24.08
+              org.freedesktop.Sdk.Extension.llvm18/aarch64/24.08
+              org.freedesktop.Sdk.Extension.rust-stable/aarch64/24.08
 
           # GNOME
           #
