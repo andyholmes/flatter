@@ -1,0 +1,86 @@
+From e039ac1baf26ead608232caec621a090c960e832 Mon Sep 17 00:00:00 2001
+From: bbhtt <bbhtt.zn0i8@slmail.me>
+Date: Fri, 17 May 2024 21:05:03 +0530
+Subject: [PATCH] compose: Seperate errors for file-read-error if
+ icon/desktop/metainfo
+
+---
+ compose/asc-compose.c   | 10 +++++-----
+ compose/asc-hint-tags.c | 12 +++++++++++-
+ 2 files changed, 16 insertions(+), 6 deletions(-)
+
+diff --git a/compose/asc-compose.c b/compose/asc-compose.c
+index 0b746ad9..38bfbd7a 100644
+--- a/compose/asc-compose.c
++++ b/compose/asc-compose.c
+@@ -1030,7 +1030,7 @@ asc_compose_process_icons (AscCompose *compose,
+ 		if (img_bytes == NULL) {
+ 			asc_result_add_hint (cres,
+ 					     cpt,
+-					     "file-read-error",
++					     "icon-file-read-error",
+ 					     "fname",
+ 					     icon_fname,
+ 					     "msg",
+@@ -1048,7 +1048,7 @@ asc_compose_process_icons (AscCompose *compose,
+ 		if (img == NULL) {
+ 			asc_result_add_hint (cres,
+ 					     cpt,
+-					     "file-read-error",
++					     "icon-file-read-error",
+ 					     "fname",
+ 					     icon_fname,
+ 					     "msg",
+@@ -1454,7 +1454,7 @@ asc_compose_process_task_cb (AscComposeTask *ctask, AscCompose *compose)
+ 		if (mi_bytes == NULL) {
+ 			asc_result_add_hint_by_cid (ctask->result,
+ 						    mi_basename,
+-						    "file-read-error",
++						    "metainfo-file-read-error",
+ 						    "fname",
+ 						    mi_fname,
+ 						    "msg",
+@@ -1587,7 +1587,7 @@ asc_compose_process_task_cb (AscComposeTask *ctask, AscCompose *compose)
+ 						if (de_bytes == NULL) {
+ 							asc_result_add_hint (ctask->result,
+ 									     cpt,
+-									     "file-read-error",
++									     "desktop-file-read-error",
+ 									     "fname",
+ 									     de_fname,
+ 									     "msg",
+@@ -1642,7 +1642,7 @@ asc_compose_process_task_cb (AscComposeTask *ctask, AscCompose *compose)
+ 			if (de_bytes == NULL) {
+ 				asc_result_add_hint_by_cid (ctask->result,
+ 							    de_basename,
+-							    "file-read-error",
++							    "desktop-file-read-error",
+ 							    "fname",
+ 							    de_fname,
+ 							    "msg",
+diff --git a/compose/asc-hint-tags.c b/compose/asc-hint-tags.c
+index cf91318e..f5bdf4c3 100644
+--- a/compose/asc-hint-tags.c
++++ b/compose/asc-hint-tags.c
+@@ -114,7 +114,17 @@ AscHintTagStatic asc_hint_tag_list[] =  {
+ 	  "Unable to read release information from <code>{{path}}</code>. The error message was: {{msg}}."
+ 	},
+ 
+-	{ "file-read-error",
++	{ "desktop-file-read-error",
++	  AS_ISSUE_SEVERITY_ERROR,
++	  "Unable to read data from file <code>{{fname}}</code>: {{msg}}",
++	},
++
++	{ "icon-file-read-error",
++	  AS_ISSUE_SEVERITY_ERROR,
++	  "Unable to read data from file <code>{{fname}}</code>: {{msg}}",
++	},
++
++	{ "metainfo-file-read-error",
+ 	  AS_ISSUE_SEVERITY_ERROR,
+ 	  "Unable to read data from file <code>{{fname}}</code>: {{msg}}",
+ 	},
+-- 
+2.45.0
+

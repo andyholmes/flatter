@@ -1,0 +1,14 @@
+diff --git a/src/builder-utils.c b/src/builder-utils.c
+index 7c838170..55c4ab62 100644
+--- a/src/builder-utils.c
++++ b/src/builder-utils.c
+@@ -1114,9 +1114,6 @@ builder_download_uri_buffer (GUri           *uri,
+   curl_easy_setopt (session, CURLOPT_WRITEDATA, &write_data);
+   curl_easy_setopt (session, CURLOPT_ERRORBUFFER, error_buffer);
+ 
+-  if (!disable_http_decompression)
+-    curl_easy_setopt (session, CURLOPT_ACCEPT_ENCODING, "");
+-
+   write_data.out = out;
+   write_data.checksums = checksums;
+   write_data.n_checksums = n_checksums;
