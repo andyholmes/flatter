@@ -9,6 +9,13 @@ precedence = "aggregate"
 SPDX-FileCopyrightText = "No rights reserved"
 SPDX-License-Identifier = "CC0-1.0"
 
+# This may not be entirely correct; some patches contain copyrights
+[[annotations]]
+path = ["build-aux/patches/**"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "Flathub Contributors"
+SPDX-License-Identifier = "LGPL-2.1-or-later"
+
 [[annotations]]
 path = ["dist/**", "package.json"]
 precedence = "aggregate"

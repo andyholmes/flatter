@@ -1,0 +1,12 @@
+diff --git a/src/builder-manifest.c b/src/builder-manifest.c
+index fa2fb6e2..84e54bbd 100644
+--- a/src/builder-manifest.c
++++ b/src/builder-manifest.c
+@@ -3033,6 +3033,7 @@ builder_manifest_cleanup (BuilderManifest *self,
+               g_print ("Running appstreamcli compose\n");
+               g_print ("Saving screenshots in %s\n", flatpak_file_get_path_cached (media_dir));
+               if (!appstreamcli_compose (error,
++                                         "--no-partial-urls",
+                                          "--prefix=/",
+                                          origin,
+                                          arg_base_url,
