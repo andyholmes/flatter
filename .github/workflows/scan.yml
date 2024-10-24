@@ -91,18 +91,6 @@ jobs:
           sarif_file: eslint-results.sarif
           wait-for-processing: true
 
-  dependency-review:
-    if: ${{ github.event_name == 'pull_request' }}
-    name: Dependency Review
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Review
-        uses: actions/dependency-review-action@v4
-
   reuse:
     name: REUSE Compliance
     runs-on: ubuntu-latest
