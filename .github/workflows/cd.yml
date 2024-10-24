@@ -13,7 +13,7 @@ jobs:
     name: Flatter
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/andyholmes/flatter/gnome:46
+      image: ghcr.io/andyholmes/flatter/gnome:master
       options: --privileged
 
     strategy:
@@ -47,8 +47,8 @@ jobs:
         uses: andyholmes/flatter@main
         with:
           files: |
-            tests/manifests/ca.andyholmes.Flatter.yml
-            tests/manifests/name.ptomato.Bloatpad.json
+            tests/manifests/ca.andyholmes.Flatter1.json
+            tests/manifests/ca.andyholmes.Flatter2.yml
           arch: ${{ matrix.arch }}
           gpg-sign: ${{ steps.gpg.outputs.fingerprint }}
           upload-bundles: true
