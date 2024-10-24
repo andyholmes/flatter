@@ -169,13 +169,13 @@ jobs:
           - name: workbench
             tag: master
             flathub: >
-              org.freedesktop.Sdk.Extension.llvm17/x86_64/23.08
-              org.freedesktop.Sdk.Extension.rust-stable/x86_64/23.08
-              org.freedesktop.Sdk.Extension.llvm17/aarch64/23.08
-              org.freedesktop.Sdk.Extension.rust-stable/aarch64/23.08
-              org.freedesktop.Sdk.Extension.node18/x86_64/23.08
-              org.freedesktop.Sdk.Extension.typescript/x86_64/23.08
-              org.freedesktop.Sdk.Extension.vala/x86_64/23.08
+              org.freedesktop.Sdk.Extension.llvm18/x86_64/24.08
+              org.freedesktop.Sdk.Extension.rust-stable/x86_64/24.08
+              org.freedesktop.Sdk.Extension.llvm18/aarch64/24.08
+              org.freedesktop.Sdk.Extension.rust-stable/aarch64/24.08
+              org.freedesktop.Sdk.Extension.node20/x86_64/24.08
+              org.freedesktop.Sdk.Extension.typescript/x86_64/24.08
+              org.freedesktop.Sdk.Extension.vala/x86_64/24.08
             gnome_nightly: >
               org.gnome.Platform/x86_64/master
               org.gnome.Sdk/x86_64/master
@@ -193,6 +193,22 @@ jobs:
               org.kde.Sdk/x86_64/5.15-23.08
               org.kde.Platform/aarch64/5.15-23.08
               org.kde.Sdk/aarch64/5.15-23.08
+
+          - name: kde
+            tag: 6.6
+            flathub: >
+              org.kde.Platform/x86_64/6.6
+              org.kde.Sdk/x86_64/6.6
+              org.kde.Platform/aarch64/6.6
+              org.kde.Sdk/aarch64/6.6
+
+          - name: kde
+            tag: 6.7
+            flathub: >
+              org.kde.Platform/x86_64/6.7
+              org.kde.Sdk/x86_64/6.7
+              org.kde.Platform/aarch64/6.7
+              org.kde.Sdk/aarch64/6.7
       fail-fast: false
 
     steps:
