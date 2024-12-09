@@ -8,7 +8,7 @@
     },
     "dependencies": {
         "@actions/artifact": "^2.0.0",
-        "@actions/cache": "^3.0.0",
+        "@actions/cache": "^4.0.0",
         "@actions/core": "^1.0.0",
         "@actions/exec": "^1.0.0",
         "@actions/github": "^6.0.0",
