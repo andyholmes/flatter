@@ -369,7 +369,7 @@ can be added with the `upload-pages-includes` input (e.g.`index.html`).
 
 1. Set the `upload-pages-artifact` input to `true`
 2. In the **Settings** for the GitHub repository, select **Pages** in the
-   sidebar and set **Source** to "GitHub Pages"
+   sidebar and set **Source** to "GitHub Actions"
 3. Add a job with [`actions/deploy-pages`][deploy-pages] to the workflow
 
 ```yml
