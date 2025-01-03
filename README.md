@@ -108,7 +108,7 @@ jobs:
     steps:
       - name: GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v1
+        uses: actions/deploy-pages@v4
 ```
 
 ## Inputs
@@ -417,7 +417,7 @@ jobs:
     steps:
       - name: GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v1
+        uses: actions/deploy-pages@v4
 ```
 
 [deploy-pages]: https://github.com/actions/deploy-pages
