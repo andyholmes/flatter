@@ -50,6 +50,9 @@ async function run() {
             }
 
             core.endGroup();
+
+            if (process.exitCode === core.ExitCode.Failure)
+                return;
         }
     } else {
         await flatter.restoreCache(repository);
@@ -60,17 +63,17 @@ async function run() {
             try {
                 await flatter.buildApplication(repository, manifest);
             } catch (e) {
-                core.setFailed(`Failed to build "${manifest}": ${e.message}`);
+                core.setFailed(`Building "${manifest}": ${e.message}`);
             }
 
             core.endGroup();
+
+            if (process.exitCode === core.ExitCode.Failure)
+                return;
         }
 
         await flatter.saveCache(repository);
     }
-
-    if (process.exitCode === core.ExitCode.Failure)
-        return;
 
     /*
      * GitHub Pages Artifact
