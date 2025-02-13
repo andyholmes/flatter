@@ -244,6 +244,7 @@ jobs:
           file: Dockerfile
           pull: true
           push: true
+          platforms: linux/amd64,linux/arm64
           tags: localhost:5000/flatter-base:latest
 
       - name: Generate Dockerfile
@@ -284,4 +285,5 @@ jobs:
           context: .
           file: ${{ matrix.runtime.name }}.Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
+          platforms: linux/amd64,linux/arm64
           tags: ghcr.io/${{ github.repository }}/${{ matrix.runtime.name }}:${{ matrix.runtime.tag }}
