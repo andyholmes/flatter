@@ -13,17 +13,58 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
-    name: Build
+  build-base:
+    name: Build Base Image
+    # aarch64 builds fail on ubuntu-24.04
     runs-on: ubuntu-22.04
     permissions:
       contents: read
       packages: write
-    services:
-      registry:
-        image: registry:latest
-        ports:
-          - 5000:5000
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Login
+        if: ${{ github.event_name != 'pull_request' }}
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: network=host
+
+      - name: Setup Cache
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      - name: Build
+        uses: docker/build-push-action@v6
+        with:
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache,new=true
+          file: Dockerfile
+          pull: true
+          push: ${{ github.event_name != 'pull_request' }}
+          platforms: linux/amd64,linux/arm64
+          tags: ghcr.io/${{ github.repository }}/flatter-base:latest
+
+  build:
+    name: Build
+    needs: [build-base]
+    # aarch64 builds fail on ubuntu-24.04
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      packages: write
 
     strategy:
       matrix:
@@ -236,22 +277,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-buildx-
 
-      - name: Build Base Image
-        uses: docker/build-push-action@v6
-        with:
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache
-          file: Dockerfile
-          pull: true
-          push: true
-          platforms: linux/amd64,linux/arm64
-          tags: localhost:5000/flatter-base:latest
-
       - name: Generate Dockerfile
         run: |
           cat >> ${{ matrix.runtime.name }}.Dockerfile << EOF
           # syntax = docker/dockerfile:experimental
-          FROM localhost:5000/flatter-base:latest
+          FROM ghcr.io/${{ github.repository }}/flatter-base:latest
           EOF
 
           if [ -n "${{ matrix.runtime.gnome_nightly }}" ]; then
@@ -281,6 +311,8 @@ jobs:
       - name: Build
         uses: docker/build-push-action@v6
         with:
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache,new=true
           allow: security.insecure
           context: .
           file: ${{ matrix.runtime.name }}.Dockerfile
