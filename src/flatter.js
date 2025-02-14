@@ -204,11 +204,16 @@ async function buildApplication(directory, manifest) {
     if (core.getInput('gpg-sign'))
         builderArgs.push(`--gpg-sign=${core.getInput('gpg-sign')}`);
 
-    await exec.exec('flatpak-builder', [
-        ...builderArgs,
-        '_build',
-        manifest,
-    ]);
+    try {
+        await exec.exec('flatpak-builder', [
+            ...builderArgs,
+            '_build',
+            manifest,
+        ]);
+    } catch {
+        if (process.exitCode === 42 && builderArgs.includes('--skip-if-unchanged'))
+            process.exitCode = 0;
+    }
 
     if (!cacheId?.localeCompare(cacheKey, undefined, { sensitivity: 'accent' }))
         await cache.saveCache([stateDir], cacheKey);
@@ -383,6 +388,9 @@ async function testApplication(directory, manifest) {
             '_build',
             manifest,
         ]);
+    } catch {
+        if (process.exitCode === 42 && builderArgs.includes('--skip-if-unchanged'))
+            process.exitCode = 0;
     } finally {
         dbusSession.kill();
     }
