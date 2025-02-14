@@ -1,5 +1,10 @@
 # Flatter
 
+> [!TIP]
+> This action is intended for nightly or development builds for a small project.
+> For more general CI tools and high-traffic use cases, see the official
+> [flatpak-github-actions] and [Flathub] which has a beta channel.
+
 Flatter is a GitHub Action for building and hosting a Flatpak repository in a
 static hosting environment, such as GitHub Pages.
 
@@ -7,10 +12,8 @@ The action uses `flatpak` and `flatpak-builder` to build, sign and export
 Flatpak applications as a repository and bundles. It includes built-in caching
 to speed up builds and support an incrementally updated repository.
 
-This action is ideal for low-traffic use cases, such as a nightly or development
-build repository for a small project. For high-traffic use cases, see
-[Flathub](https://github.com/flathub/flathub/wiki/App-Submission) instead, which
-also has a beta channel.
+[flatpak-github-actions]: https://github.com/flatpak/flatpak-github-actions
+[Flathub]: https://docs.flathub.org/docs/for-app-authors/submission
 
 ## Table of Contents
 
@@ -361,6 +364,10 @@ Set the `upload-bundles` input to `true` and together with
 recent Flatpak bundle built by Flatter.
 
 ### GitHub Pages
+
+> [!CAUTION]
+> Projects hosted on Github pages may have download speeds throttled if too
+> many users are subscribed to the Flatpak repository.
 
 Flatter can upload the repository as an artifact compatible with GitHub Pages,
 making the pages for the GitHub repository a Flatpak Repository. Flutter will
