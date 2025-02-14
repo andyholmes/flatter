@@ -44,11 +44,12 @@ on:
 jobs:
   flatter:
     name: Flatter
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.arch == 'aarch64' && 'ubuntu-22.04-arm' || 'ubuntu-latest' }}
     container:
       image: ghcr.io/andyholmes/flatter/gnome:master
       options: --privileged
 
+    # See "Multiple Architectures" below
     strategy:
       matrix:
         arch: [x86_64, aarch64]
@@ -60,14 +61,6 @@ jobs:
       # Checkout a repository with Flatpak manifests
       - name: Checkout
         uses: actions/checkout@v3
-
-      # See "Multiple Architectures" below
-      - name: Setup QEMU
-        if: ${{ matrix.arch == 'aarch64' }}
-        id: qemu
-        uses: docker/setup-qemu-action@v3
-        with:
-          platforms: arm64
 
       # See "GPG Signing" below
       - name: Setup GPG
@@ -158,7 +151,7 @@ For more information about deploying Flatter, see [Deployment](#deployment).
 |-------------------------|-----------|----------------------------------------|
 | `upload-bundles`        | `false`   | Upload a bundle for each application   |
 | `upload-pages-artifact` | `false`   | Upload the repo for GitHub Pages       |
-| `upload-pages-includes`         | None      | Files to include in GitHub Pages       |
+| `upload-pages-includes` | None      | Files to include in GitHub Pages       |
 
 The `upload-bundles` input controls whether a Flatpak bundle will be uploaded
 when an application is built. See [Flatpak Bundles](#flatpak-bundles) for more
@@ -168,9 +161,9 @@ The `upload-pages-artifact` input controls whether the repository will be
 uploaded as a GitHub Pages artifact. See [GitHub Pages](#github-pages) for more
 information.
 
-The `upload-pages-includes` input allows including additional files in the GitHub Pages
-artifact, such as a `index.html`. See [GitHub Pages](#github-pages) for more
-information.
+The `upload-pages-includes` input allows including additional files in the
+GitHub Pages artifact, such as a `index.html`. See [GitHub Pages](#github-pages)
+for more information.
 
 ### Test Options
 
@@ -301,7 +294,7 @@ gpg2 --homedir flatter --quick-gen-key username@github.io
 ```
 
 Export the private key, then add the key and passphrase as GitHub Action secrets
-(e.g. `GPG_PRIVATE_KEY` and `GPG_PASSPHRASE`):
+(e.g. `GPG_PRIVATE_KEY` and optionally `GPG_PASSPHRASE`):
 
 ```sh
 gpg2 --homedir flatter --armor --export-secret-key username@github.io
@@ -476,7 +469,11 @@ jobs:
 
 ## Multiple Architectures
 
-Flatter support building repositories with multiple architectures, such as
+> [!NOTE]
+> As of February 2025, arm64/aarch64 builds will fail on `ubuntu-latest`
+> (i.e. `ubuntu-24.04-arm`) so `ubuntu-22.04-arm` must be used.
+
+Flatter supports building repositories with multiple architectures, such as
 `x86_64` for desktop and `aarch64` for mobile devices.
 
 Multiple architectures can be built in a [job matrix][gh-matrix] or by adding
@@ -496,7 +493,7 @@ on:
 jobs:
   flatter:
     name: Flatter
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.arch == 'aarch64' && 'ubuntu-22.04-arm' || 'ubuntu-latest' }}
     container:
       image: ghcr.io/andyholmes/flatter/gnome:master
       options: --privileged
@@ -512,14 +509,6 @@ jobs:
       # Checkout a repository with Flatpak manifests
       - name: Checkout
         uses: actions/checkout@v3
-
-      # See "Multiple Architectures"
-      - name: Setup QEMU
-        if: ${{ matrix.arch == 'aarch64' }}
-        id: qemu
-        uses: docker/setup-qemu-action@v3
-        with:
-          platforms: arm64
 
       - name: Build
         uses: andyholmes/flatter@main
