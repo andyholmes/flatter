@@ -253,6 +253,15 @@ jobs:
       fail-fast: false
 
     steps:
+      - name: Cleanup
+        run: |
+          sudo rm -rf /opt/ghc \
+                      /opt/hostedtoolcache/CodeQL \
+                      /usr/share/dotnet \
+                      /usr/local/lib/android
+          sudo docker image prune --all --force
+          sudo docker builder prune -a
+
       - name: Checkout
         uses: actions/checkout@v4
 
