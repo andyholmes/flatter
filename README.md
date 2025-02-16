@@ -44,7 +44,7 @@ on:
 jobs:
   flatter:
     name: Flatter
-    runs-on: ${{ matrix.arch == 'aarch64' && 'ubuntu-22.04-arm' || 'ubuntu-latest' }}
+    runs-on: ubuntu-latest
     container:
       image: ghcr.io/andyholmes/flatter/gnome:master
       options: --privileged
@@ -469,12 +469,9 @@ jobs:
 
 ## Multiple Architectures
 
-> [!NOTE]
-> As of February 2025, arm64/aarch64 builds will fail on `ubuntu-latest`
-> (i.e. `ubuntu-24.04-arm`) so `ubuntu-22.04-arm` must be used.
-
-Flatter supports building repositories with multiple architectures, such as
-`x86_64` for desktop and `aarch64` for mobile devices.
+Flatter supports building packages for `x86_64` and `aarch64` using GitHub's
+native runners. Currently, each image has runtimes for both architectures
+installed.
 
 Multiple architectures can be built in a [job matrix][gh-matrix] or by adding
 more jobs, but must not run concurrently if they share a repository directory.
@@ -493,7 +490,7 @@ on:
 jobs:
   flatter:
     name: Flatter
-    runs-on: ${{ matrix.arch == 'aarch64' && 'ubuntu-22.04-arm' || 'ubuntu-latest' }}
+    runs-on: ubuntu-latest
     container:
       image: ghcr.io/andyholmes/flatter/gnome:master
       options: --privileged
