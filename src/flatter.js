@@ -131,10 +131,15 @@ async function generateDescription(directory) {
     /* Collect the .flatpakrepo fields */
     const {repository} = github.context.payload;
 
+    // use the given domain name if the 'CNAME' file exists.
+    let url = fs.existsSync('CNAME') ?
+        `https://${(await fs.promises.readFile('CNAME')).toString()}`
+        : `https://${repository.owner.login}.github.io/${repository.name}`;
+    
     const metadata = {
         Title: repository.name,
         Description: repository.description,
-        Url: `https://${repository.owner.login}.github.io/${repository.name}`,
+        Url: url,
         Homepage: repository.homepage || repository.html_url,
         Icon: 'https://raw.githubusercontent.com/flatpak/flatpak/main/flatpak.png',
     };
