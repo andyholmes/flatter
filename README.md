@@ -244,7 +244,7 @@ The `repository` output is an absolute path to the repository directory,
 corresponding to the `--repo` command-line option.
 
 ## Containers
-> Feel free to open pull request for additional runtimes
+> Feel free to open a pull request for additional runtimes
 
 Flatter provides containers with pre-installed runtimes for several platforms,
 built from the base [`Dockerfile`](Dockerfile):
@@ -340,7 +340,7 @@ jobs:
           passphrase: ${{ secrets.GPG_PASSPHRASE }}
 
       - name: Build
-        uses: andyholmes/actions/flatter@main
+        uses: andyholmes/flatter@main
         with:
           files: |
             build-aux/flatpak/com.example.App.json
@@ -414,7 +414,7 @@ jobs:
           echo "flatter.andyholmes.ca" > CNAME
 
       - name: Build
-        uses: andyholmes/actions/flatter@main
+        uses: andyholmes/flatter@main
         with:
           files: |
             build-aux/flatpak/com.example.App.json
@@ -474,7 +474,7 @@ jobs:
 
       - name: Build
         id: flatpak
-        uses: andyholmes/actions/flatter@main
+        uses: andyholmes/flatter@main
         with:
           files: |
             build-aux/flatpak/com.example.App.json
