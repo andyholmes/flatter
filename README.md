@@ -371,9 +371,16 @@ recent Flatpak bundle built by Flatter.
 > many users are subscribed to the Flatpak repository.
 
 Flatter can upload the repository as an artifact compatible with GitHub Pages,
-making the pages for the GitHub repository a Flatpak Repository. Flutter will
-generate an `index.flatpakrepo` file in the repository directory and other files
-can be added with the `upload-pages-includes` input (e.g.`index.html`).
+making the pages for the GitHub repository a Flatpak Repository.
+
+When `upload-pages-artifact` is `true`, Flatter will generate an
+`index.flatpakrepo` file in the repository directory, before preparing the
+artifact. Other files can be added with the `upload-pages-includes` input
+(e.g.`index.html`).
+
+If the current directory includes a `CNAME` file the contents will be used as
+the `Url` field, otherwise GitHub's default deployment path will be used
+(e.g. `https://andyholmes.github.io/flatter`).
 
 1. Set the `upload-pages-artifact` input to `true`
 2. In the **Settings** for the GitHub repository, select **Pages** in the
@@ -401,6 +408,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      # Generate a CNAME file in current directory
+      - name: Generate CNAME
+        run: |
+          echo "flatter.andyholmes.ca" > CNAME
+
       - name: Build
         uses: andyholmes/actions/flatter@main
         with:
@@ -408,6 +420,7 @@ jobs:
             build-aux/flatpak/com.example.App.json
           upload-pages-artifact: true
           upload-pages-includes: |
+            CNAME
             default.css
             index.html
 
