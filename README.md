@@ -64,6 +64,7 @@ jobs:
 
       # See "GPG Signing" below
       - name: Setup GPG
+        if: ${{ github.event_name != 'pull_request' }}
         id: gpg
         uses: crazy-max/ghaction-import-gpg@v5
         with:
@@ -285,6 +286,11 @@ jobs:
 
 ## GPG Signing
 
+> [!TIP]
+> If the workflow is intended to be run on pull requests from contributors, be
+> sure to add `if: ${{ github.event_name != 'pull_request' }}` to the GPG
+> signing step to avoid the job failing.
+
 Flatter supports signing the repository and bundles with GPG. First generate a
 GPG key for your repository:
 
@@ -325,6 +331,8 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Setup GPG
+        # Skip GPG signing for pull requests
+        if: ${{ github.event_name != 'pull_request' }}
         id: gpg
         uses: crazy-max/ghaction-import-gpg@v5
         with:
