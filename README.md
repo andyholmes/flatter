@@ -253,10 +253,10 @@ built from the base [`Dockerfile`](Dockerfile):
 |--------------------------|-----------------------------|---------------------|
 | `freedesktop`            | `23.08`, `24.08`            | `x86_64`, `aarch64` |
 | `rust`                   | `23.08`, `24.08`            | `x86_64`, `aarch64` |
-| `gnome`                  | `46`, `47`, `master`        | `x86_64`, `aarch64` |
-| `gnome-rust`             | `46`, `47`                  | `x86_64`, `aarch64` |
-| `gnome-typescript`       | `46`, `47`                  | `x86_64`, `aarch64` |
-| `gnome-vala`             | `46`, `47`                  | `x86_64`, `aarch64` |
+| `gnome`                  | `47`, `48`, `master`        | `x86_64`, `aarch64` |
+| `gnome-rust`             | `47`, `48`                  | `x86_64`, `aarch64` |
+| `gnome-typescript`       | `47`, `48`                  | `x86_64`, `aarch64` |
+| `gnome-vala`             | `47`, `48`                  | `x86_64`, `aarch64` |
 | `kde`                    | `5.15-23.08`, `6.6`, `6.7`  | `x86_64`, `aarch64` |
 | `workbench`<sup>1</sup>  | `master`                    | `x86_64`, `aarch64` |
 
