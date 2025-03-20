@@ -11,7 +11,7 @@ COPY build-aux/ /build-aux/
 #   - rsync:           JamesIves/github-pages-deploy-action
 #   - zstd:            actions/cache
 RUN dnf install -y ccache flatpak flatpak-builder git git-lfs \
-                   dbus-daemon xorg-x11-server-Xvfb \
+                   dbus-daemon xorg-x11-server-Xvfb xwayland-run \
                    docker \
                    python3-{aiohttp,apt,editorconfig,github,gobject,jsonschema,lxml,magic,packaging,pyelftools,ruamel-yaml,semver,toml} \
                    rsync \
