@@ -1,0 +1,20 @@
+---
+app-id: ca.andyholmes.Flatter.Failure
+runtime: org.freedesktop.Platform
+runtime-version: 24.08
+sdk: org.freedesktop.Sdk
+command: flatter
+modules:
+  - name: flatter
+    buildsystem: meson
+    builddir: true
+    build-options:
+      env:
+        CFLAGS: -DFLATTER_FAILURE
+    config-opts:
+      - --prefix=/app
+      - --libdir=lib/
+    sources:
+      - type: dir
+        path: .
+

@@ -1,0 +1,24 @@
+{
+    "app-id": "ca.andyholmes.Flatter.Success",
+    "runtime": "org.freedesktop.Platform",
+    "runtime-version": "24.08",
+    "sdk": "org.freedesktop.Sdk",
+    "command": "flatter",
+    "modules": [
+        {
+            "name": "flatter",
+            "buildsystem": "meson",
+            "builddir": true,
+            "config-opts": [
+                "--prefix=/app",
+                "--libdir=lib/"
+            ],
+            "sources": [
+                {
+                    "type": "dir",
+                    "path": "."
+                }
+            ]
+        }
+    ]
+}

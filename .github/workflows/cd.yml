@@ -13,7 +13,7 @@ jobs:
     name: Flatter
     runs-on: ${{ matrix.arch == 'aarch64' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
     container:
-      image: ghcr.io/andyholmes/flatter/gnome:master
+      image: ghcr.io/andyholmes/flatter/freedesktop:24.08
       options: --privileged
 
     strategy:
@@ -41,8 +41,8 @@ jobs:
         uses: andyholmes/flatter@main
         with:
           files: |
-            tests/manifests/ca.andyholmes.Flatter1.json
-            tests/manifests/ca.andyholmes.Flatter2.yml
+            tests/flatpak/ca.andyholmes.Flatter.Success.json
+            tests/flatpak/ca.andyholmes.Flatter.Failure.yml
           arch: ${{ matrix.arch }}
           gpg-sign: ${{ steps.gpg.outputs.fingerprint }}
           upload-bundles: true
@@ -51,6 +51,15 @@ jobs:
             tests/index.html
             tests/default.css
             CNAME
+
+      - name: Test
+        uses: andyholmes/flatter@main
+        with:
+          files: |
+            tests/flatpak/ca.andyholmes.Flatter.Success.json
+          arch: ${{ matrix.arch }}
+          cache-key: ''
+          run-tests: true
 
   deploy:
     name: Deploy
