@@ -379,8 +379,8 @@ async function testApplication(directory, manifest) {
         '--ccache',
         '--disable-rofiles-fuse',
         '--force-clean',
-        `--repo=${directory}`,
-        `--state-dir=${stateDir}`,
+        `--repo="${directory}"`,
+        `--state-dir="${stateDir}"`,
         ...(core.getMultilineInput('flatpak-builder-args')),
     ];
 
