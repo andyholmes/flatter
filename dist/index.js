@@ -144302,6 +144302,8 @@ async function testApplication(directory, manifest) {
         'test-args': [
             ...(buildOptions['test-args'] || []),
             `--filesystem=${dbusSession.socket}`,
+            '--device=dri',
+            '--share=ipc',
             '--share=network',
             '--socket=x11',
         ],
