@@ -388,11 +388,9 @@ async function testApplication(directory, manifest) {
         builderArgs.push(`--gpg-sign=${core.getInput('gpg-sign')}`);
 
     try {
-        await exec.exec('xvfb-run --auto-servernum flatpak-builder', [
-            ...builderArgs,
-            '_build',
-            manifest,
-        ]);
+        const fullCommand = ['xwfb-run --', ...builderArgs, '_build', manifest]
+            .join(' ');
+        await exec.exec('bash', ['-c', fullCommand]);
     } catch {
         if (process.exitCode === 42 && builderArgs.includes('--skip-if-unchanged'))
             process.exitCode = 0;
