@@ -1,9 +1,15 @@
 {
-    "app-id": "ca.andyholmes.Flatter.Success",
-    "runtime": "org.freedesktop.Platform",
-    "runtime-version": "24.08",
-    "sdk": "org.freedesktop.Sdk",
+    "app-id": "ca.andyholmes.Flatter",
+    "runtime": "org.gnome.Platform",
+    "runtime-version": "master",
+    "sdk": "org.gnome.Sdk",
     "command": "flatter",
+    "finish-args": [
+        "--device=dri",
+        "--share=ipc",
+        "--socket=fallback-x11",
+        "--socket=wayland"
+    ],
     "modules": [
         {
             "name": "flatter",
