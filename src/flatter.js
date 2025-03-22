@@ -196,6 +196,7 @@ async function buildApplication(directory, manifest) {
         cacheId = await cache.restoreCache([stateDir], cacheKey);
     }
 
+    // Prepare flatpak-builder arguments
     const builderArgs = [
         `--arch=${core.getInput('arch')}`,
         '--ccache',
@@ -209,16 +210,15 @@ async function buildApplication(directory, manifest) {
     if (core.getInput('gpg-sign'))
         builderArgs.push(`--gpg-sign=${core.getInput('gpg-sign')}`);
 
-    try {
-        await exec.exec('flatpak-builder', [
-            ...builderArgs,
-            '_build',
-            manifest,
-        ]);
-    } catch {
-        if (process.exitCode === 42 && builderArgs.includes('--skip-if-unchanged'))
-            process.exitCode = 0;
-    }
+    // Execute build command
+    const exitCode = await exec.exec('flatpak-builder',
+        [...builderArgs, '_build', manifest],
+        {ignoreReturnCode: true});
+
+    if (exitCode === 42 && builderArgs.includes('--skip-if-unchanged'))
+        core.info('No changes and "--skip-if-unchanged" in arguments');
+    else if (exitCode !== 0)
+        throw new Error(`tests failed with exit code ${exitCode}`);
 
     if (!cacheId?.localeCompare(cacheKey, undefined, { sensitivity: 'accent' }))
         await cache.saveCache([stateDir], cacheKey);
@@ -375,7 +375,7 @@ async function testApplication(directory, manifest) {
 
     await writeManifest(manifest, testManifest);
 
-    // Build Phase
+    // Prepare flatpak-builder arguments
     const builderArgs = [
         `--arch=${arch}`,
         '--ccache',
@@ -389,18 +389,17 @@ async function testApplication(directory, manifest) {
     if (core.getInput('gpg-sign'))
         builderArgs.push(`--gpg-sign=${core.getInput('gpg-sign')}`);
 
+    // Execute test command
     try {
-        const fullCommand = [
-            'xwfb-run --',
-            'flatpak-builder',
-            ...builderArgs,
-            '_build',
-            manifest,
-        ].join(' ');
-        await exec.exec('bash', ['-c', fullCommand]);
-    } catch {
-        if (process.exitCode === 42 && builderArgs.includes('--skip-if-unchanged'))
-            process.exitCode = 0;
+        const testCommand = ['xwfb-run', '--', 'flatpak-builder',
+            ...builderArgs, '_build', manifest].join(' ');
+        const exitCode = await exec.exec('bash', ['-c', testCommand],
+            {ignoreReturnCode: true});
+
+        if (exitCode === 42 && builderArgs.includes('--skip-if-unchanged'))
+            core.info('No changes and "--skip-if-unchanged" in arguments');
+        else if (exitCode !== 0)
+            throw new Error(`tests failed with exit code ${exitCode}`);
     } finally {
         dbusSession.kill();
     }
