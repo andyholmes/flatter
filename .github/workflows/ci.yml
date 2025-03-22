@@ -1,0 +1,94 @@
+name: Continuous Integration
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  flatter:
+    name: Flatter
+    runs-on: ${{ matrix.arch == 'aarch64' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
+    container:
+      image: ghcr.io/andyholmes/flatter/gnome:master
+      options: --privileged
+
+    strategy:
+      max-parallel: 1
+      matrix:
+        arch: [x86_64, aarch64]
+      fail-fast: false
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup GPG
+        if: ${{ !github.event.repository.fork }}
+        id: gpg
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+
+      - name: Generate CNAME
+        run: |
+          echo "flatter.andyholmes.ca" > CNAME
+
+      #
+      # Check uploaded artifacts
+      #
+      - name: Build
+        uses: andyholmes/flatter@main
+        with:
+          files: |
+            tests/flatpak/ca.andyholmes.Flatter.json
+            tests/flatpak/ca.andyholmes.Flatter.Failure.yml
+          arch: ${{ matrix.arch }}
+          gpg-sign: ${{ steps.gpg.outputs.fingerprint }}
+          upload-bundles: true
+          upload-pages-artifact: ${{ matrix.arch == 'aarch64' }}
+          upload-pages-includes: |
+            tests/index.html
+            tests/default.css
+            CNAME
+
+      #
+      # Check expected tests pass
+      #
+      - name: Test Success
+        id: test-success
+        continue-on-error: true
+        uses: andyholmes/flatter@main
+        with:
+          files: |
+            tests/flatpak/ca.andyholmes.Flatter.json
+          arch: ${{ matrix.arch }}
+          cache-key: ''
+          run-tests: true
+
+      - name: Assert Test Success
+        if: ${{ steps.test-success.outcome != 'success' }}
+        run: |
+          echo "Expected 'Test Success' step to pass." >> $GITHUB_STEP_SUMMARY
+          exit 1
+
+      #
+      # Check expected tests fail
+      #
+      - name: Test Failure
+        id: test-failure
+        continue-on-error: true
+        uses: andyholmes/flatter@main
+        with:
+          files: |
+            tests/flatpak/ca.andyholmes.Flatter.Failure.yml
+          arch: ${{ matrix.arch }}
+          cache-key: ''
+          run-tests: true
+
+      - name: Assert Test Failure
+        if: ${{ steps.test-failure.outcome != 'failure' }}
+        run: |
+          echo "Expected 'Test Failure' step to fail." >> $GITHUB_STEP_SUMMARY
+          exit 1
+
