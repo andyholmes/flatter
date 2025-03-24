@@ -30,20 +30,32 @@ jobs:
         with:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
 
-      - name: Generate CNAME
-        run: |
-          echo "flatter.andyholmes.ca" > CNAME
-
       #
-      # Check uploaded artifacts
+      # Check build (uncached)
       #
-      - name: Build
+      - name: Build (no cached state)
         uses: andyholmes/flatter@main
         with:
           files: |
             tests/flatpak/ca.andyholmes.Flatter.json
-            tests/flatpak/ca.andyholmes.Flatter.Failure.yml
           arch: ${{ matrix.arch }}
+          cache-key: ${{ github.sha }}
+          gpg-sign: ${{ steps.gpg.outputs.fingerprint }}
+
+      #
+      # Check build (cached)
+      #
+      - name: Generate CNAME
+        run: |
+          echo "flatter.andyholmes.ca" > CNAME
+
+      - name: Build (cached state)
+        uses: andyholmes/flatter@staging
+        with:
+          files: |
+            tests/flatpak/ca.andyholmes.Flatter.json
+          arch: ${{ matrix.arch }}
+          cache-key: ${{ github.sha }}
           gpg-sign: ${{ steps.gpg.outputs.fingerprint }}
           upload-bundles: true
           upload-pages-artifact: ${{ matrix.arch == 'aarch64' }}

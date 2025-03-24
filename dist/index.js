@@ -144031,6 +144031,43 @@ function checksumFile(filePath) {
 }
 
 /**
+ * Restore the cached build state for a manifest.
+ *
+ * @param {PathLike} manifest - A file path to a Flatpak manifest
+ * @returns {string|null} - A state key, or null if disabled
+ */
+async function restoreBuildState(manifest) {
+    const baseKey = core.getInput('cache-key');
+    if (!baseKey || !cache.isFeatureAvailable()) {
+        core.debug('Build cache disabled; skipping restore');
+        return null;
+    }
+
+    const arch = core.getInput('arch');
+    const checksum = await checksumFile(manifest);
+
+    const cacheKey = `${baseKey}-${arch}-${checksum}`;
+    const cacheId = await cache.restoreCache(['.flatpak-builder'], cacheKey);
+    if (cacheId)
+        core.debug(`Build state restored with key "${cacheKey}"`);
+
+    return cacheKey;
+}
+
+/**
+ * Save the cached build state for a manifest.
+ *
+ * @param {string|null} stateKey - A state key, or null to skip
+ * @returns {Promise<>} A promise for the operation
+ */
+async function saveBuildState(key) {
+    if (!key)
+        core.debug('Build cache disabled; skipping save');
+    else
+        await cache.saveCache(['.flatpak-builder'], key);
+}
+
+/**
  * Load a Flatpak manifest (JSON or YAML).
  *
  * @param {PathLike} manifestPath - A path to a Flatpak manifest
@@ -144144,15 +144181,7 @@ async function generateDescription(directory) {
  * @param {PathLike} manifest - A path to a Flatpak manifest
  */
 async function buildApplication(directory, manifest) {
-    const arch = core.getInput('arch');
-    const checksum = await checksumFile(manifest);
-    const stateDir = `.flatpak-builder-${arch}-${checksum}`;
-
-    let cacheId, cacheKey;
-    if ((cacheKey = core.getInput('cache-key')) && cache.isFeatureAvailable()) {
-        cacheKey = `${cacheKey}-${arch}-${checksum}`;
-        cacheId = await cache.restoreCache([stateDir], cacheKey);
-    }
+    const buildState = await restoreBuildState(manifest);
 
     // Prepare flatpak-builder arguments
     const builderArgs = [
@@ -144161,7 +144190,6 @@ async function buildApplication(directory, manifest) {
         '--disable-rofiles-fuse',
         '--force-clean',
         `--repo=${directory}`,
-        `--state-dir=${stateDir}`,
         ...(core.getMultilineInput('flatpak-builder-args')),
     ];
 
@@ -144178,8 +144206,7 @@ async function buildApplication(directory, manifest) {
     else if (exitCode !== 0)
         throw new Error(`tests failed with exit code ${exitCode}`);
 
-    if (!cacheId?.localeCompare(cacheKey, undefined, { sensitivity: 'accent' }))
-        await cache.saveCache([stateDir], cacheKey);
+    await saveBuildState(buildState);
 }
 
 /**
@@ -144271,16 +144298,7 @@ async function checkApplication(_directory, manifest) {
  * @param {PathLike} manifest - A path to a Flatpak manifest
  */
 async function testApplication(directory, manifest) {
-    const arch = core.getInput('arch');
-    const checksum = await checksumFile(manifest);
-    const stateDir = `.flatpak-builder-${arch}-${checksum}`;
-
-    let cacheId = core.getInput('cache-key');
-    let cacheKey = core.getInput('cache-key');
-    if (cacheKey && cache.isFeatureAvailable()) {
-        cacheKey = `${cacheKey}-${arch}-${checksum}`;
-        cacheId = await cache.restoreCache([stateDir], cacheKey);
-    }
+    const buildState = await restoreBuildState(manifest);
 
     /*
      * Prepare the Flatpak manifest
@@ -144335,12 +144353,11 @@ async function testApplication(directory, manifest) {
 
     // Prepare flatpak-builder arguments
     const builderArgs = [
-        `--arch=${arch}`,
+        `--arch=${core.getInput('arch')}`,
         '--ccache',
         '--disable-rofiles-fuse',
         '--force-clean',
-        `--repo="${directory}"`,
-        `--state-dir="${stateDir}"`,
+        `--repo=${directory}`,
         ...(core.getMultilineInput('flatpak-builder-args')),
     ];
 
@@ -144362,9 +144379,7 @@ async function testApplication(directory, manifest) {
         dbusSession.kill();
     }
 
-    // If the key and ID match, the cache is disabled or already saved
-    if (!!cacheId?.localeCompare(cacheKey, undefined, { sensitivity: 'accent' }))
-        await cache.saveCache([stateDir], cacheKey);
+    await saveBuildState(buildState);
 }
 
 /**
@@ -144528,8 +144543,8 @@ async function includeFiles(repo) {
  */
 async function run() {
     const manifests = core.getMultilineInput('files');
-    const repository = `${process.cwd()}/repo`;
-    core.setOutput('repository', repository);
+    const repository = __nccwpck_require__.ab + "repo";
+    core.setOutput('repository', __nccwpck_require__.ab + "repo");
 
 
     /*
@@ -144540,13 +144555,13 @@ async function run() {
             core.info(`Testing "${manifest}"`);
 
             try {
-                await checkApplication(repository, manifest);
+                await checkApplication(__nccwpck_require__.ab + "repo", manifest);
             } catch (e) {
                 core.warning(`Checking "${manifest}": ${e.message}`);
             }
 
             try {
-                await testApplication(repository, manifest);
+                await testApplication(__nccwpck_require__.ab + "repo", manifest);
             } catch (e) {
                 core.setFailed(`Testing "${manifest}": ${e.message}`);
             }
@@ -144555,13 +144570,13 @@ async function run() {
                 return;
         }
     } else {
-        await restoreCache(repository);
+        await restoreCache(__nccwpck_require__.ab + "repo");
 
         for (const manifest of manifests) {
             core.info(`Building "${manifest}"`);
 
             try {
-                await buildApplication(repository, manifest);
+                await buildApplication(__nccwpck_require__.ab + "repo", manifest);
             } catch (e) {
                 core.setFailed(`Building "${manifest}": ${e.message}`);
             }
@@ -144570,7 +144585,7 @@ async function run() {
                 return;
         }
 
-        await saveCache(repository);
+        await saveCache(__nccwpck_require__.ab + "repo");
     }
 
     /*
@@ -144581,13 +144596,13 @@ async function run() {
 
         try {
             // Generate a .flatpakrepo file
-            await generateDescription(repository);
+            await generateDescription(__nccwpck_require__.ab + "repo");
 
             // Copy extra files to the repository directory
-            await includeFiles(repository);
+            await includeFiles(__nccwpck_require__.ab + "repo");
 
             // Upload the repository directory as a Github Pages artifact
-            await uploadPagesArtifact(repository);
+            await uploadPagesArtifact(__nccwpck_require__.ab + "repo");
         } catch (e) {
             core.setFailed(`Failed to upload artifact: ${e.message}`);
         }
@@ -144608,7 +144623,7 @@ async function run() {
 
         for (const manifest of manifests) {
             try {
-                const filePath = await bundleApplication(repository,
+                const filePath = await bundleApplication(__nccwpck_require__.ab + "repo",
                     manifest);
                 const artifactName = filePath.replace('.flatpak',
                     `-${core.getInput('arch')}`);
