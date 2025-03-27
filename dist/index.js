@@ -144543,8 +144543,8 @@ async function includeFiles(repo) {
  */
 async function run() {
     const manifests = core.getMultilineInput('files');
-    const repository = __nccwpck_require__.ab + "repo";
-    core.setOutput('repository', __nccwpck_require__.ab + "repo");
+    const repository = `${process.cwd()}/repo`;
+    core.setOutput('repository', repository);
 
 
     /*
@@ -144555,13 +144555,13 @@ async function run() {
             core.info(`Testing "${manifest}"`);
 
             try {
-                await checkApplication(__nccwpck_require__.ab + "repo", manifest);
+                await checkApplication(repository, manifest);
             } catch (e) {
                 core.warning(`Checking "${manifest}": ${e.message}`);
             }
 
             try {
-                await testApplication(__nccwpck_require__.ab + "repo", manifest);
+                await testApplication(repository, manifest);
             } catch (e) {
                 core.setFailed(`Testing "${manifest}": ${e.message}`);
             }
@@ -144570,13 +144570,13 @@ async function run() {
                 return;
         }
     } else {
-        await restoreCache(__nccwpck_require__.ab + "repo");
+        await restoreCache(repository);
 
         for (const manifest of manifests) {
             core.info(`Building "${manifest}"`);
 
             try {
-                await buildApplication(__nccwpck_require__.ab + "repo", manifest);
+                await buildApplication(repository, manifest);
             } catch (e) {
                 core.setFailed(`Building "${manifest}": ${e.message}`);
             }
@@ -144585,7 +144585,7 @@ async function run() {
                 return;
         }
 
-        await saveCache(__nccwpck_require__.ab + "repo");
+        await saveCache(repository);
     }
 
     /*
@@ -144596,13 +144596,13 @@ async function run() {
 
         try {
             // Generate a .flatpakrepo file
-            await generateDescription(__nccwpck_require__.ab + "repo");
+            await generateDescription(repository);
 
             // Copy extra files to the repository directory
-            await includeFiles(__nccwpck_require__.ab + "repo");
+            await includeFiles(repository);
 
             // Upload the repository directory as a Github Pages artifact
-            await uploadPagesArtifact(__nccwpck_require__.ab + "repo");
+            await uploadPagesArtifact(repository);
         } catch (e) {
             core.setFailed(`Failed to upload artifact: ${e.message}`);
         }
@@ -144623,7 +144623,7 @@ async function run() {
 
         for (const manifest of manifests) {
             try {
-                const filePath = await bundleApplication(__nccwpck_require__.ab + "repo",
+                const filePath = await bundleApplication(repository,
                     manifest);
                 const artifactName = filePath.replace('.flatpak',
                     `-${core.getInput('arch')}`);

@@ -395,7 +395,7 @@ async function testApplication(directory, manifest) {
 
     // Prepare flatpak-builder arguments
     const builderArgs = [
-        `--arch=${arch}`,
+        `--arch=${core.getInput('arch')}`,
         '--ccache',
         '--disable-rofiles-fuse',
         '--force-clean',
