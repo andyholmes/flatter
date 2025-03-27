@@ -6,8 +6,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  flatter:
-    name: Flatter
+  tests:
+    name: Tests
     runs-on: ${{ matrix.arch == 'aarch64' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
     container:
       image: ghcr.io/andyholmes/flatter/gnome:master
@@ -103,4 +103,49 @@ jobs:
         run: |
           echo "Expected 'Test Failure' step to fail." >> $GITHUB_STEP_SUMMARY
           exit 1
+
+  check_artifacts:
+    name: Check Artifacts
+    runs-on: ubuntu-latest
+    needs: tests
+
+    steps:
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Check Contents
+        run: |
+          echo "Artifacts:"
+          ls -R artifacts
+
+          if [ ! -f artifacts/ca.andyholmes.Flatter-x86_64/ca.andyholmes.Flatter.flatpak ]; then
+            echo "Artifact ca.andyholmes.Flatter-x86_64 not found." >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+
+          if [ ! -f artifacts/ca.andyholmes.Flatter-aarch64/ca.andyholmes.Flatter.flatpak ]; then
+            echo "Artifact ca.andyholmes.Flatter-aarch64 not found." >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+
+          if [ ! -f artifacts/github-pages/artifact.tar ]; then
+            echo "The github-pages artifact was not found." >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+
+          ARTIFACT_FILES=$(tar -tf artifacts/github-pages/artifact.tar)
+          if ! echo "$ARTIFACT_FILES" | grep -q "./index.flatpakrepo"; then
+            echo "index.flatpakrepo was not generated for the archive" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+
+          INCLUDED_FILES="./index.html ./default.css ./CNAME"
+          for file in $INCLUDED_FILES; do
+            if ! echo "$ARTIFACT_FILES" | grep -q "$file"; then
+              echo "The file $file was not included in the archive" >> $GITHUB_STEP_SUMMARY
+              exit 1
+            fi
+          done
 
