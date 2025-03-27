@@ -50,7 +50,7 @@ jobs:
           echo "flatter.andyholmes.ca" > CNAME
 
       - name: Build (cached state)
-        uses: andyholmes/flatter@staging
+        uses: andyholmes/flatter@main
         with:
           files: |
             tests/flatpak/ca.andyholmes.Flatter.json
