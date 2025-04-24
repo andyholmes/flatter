@@ -137557,8 +137557,7 @@ async function testApplication(directory, manifest) {
             '--device=dri',
             '--share=ipc',
             '--share=network',
-            '--socket=fallback-x11',
-            '--socket=wayland',
+            '--socket=x11',
         ],
     };
 
