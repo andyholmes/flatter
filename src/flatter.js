@@ -408,7 +408,7 @@ async function testApplication(directory, manifest) {
 
     // Execute test command
     try {
-        const testCommand = ['xwfb-run', '--', 'flatpak-builder',
+        const testCommand = ['xvfb-run', '--', 'flatpak-builder',
             ...builderArgs, '_build', manifest].join(' ');
         const exitCode = await exec.exec('bash', ['-c', testCommand],
             {ignoreReturnCode: true});
