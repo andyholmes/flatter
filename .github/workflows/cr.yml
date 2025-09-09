@@ -81,6 +81,14 @@ jobs:
               org.freedesktop.Platform/aarch64/24.08
               org.freedesktop.Sdk/aarch64/24.08
 
+          - name: freedesktop
+            tag: 25.08
+            flathub: >
+              org.freedesktop.Platform/x86_64/25.08
+              org.freedesktop.Sdk/x86_64/25.08
+              org.freedesktop.Platform/aarch64/25.08
+              org.freedesktop.Sdk/aarch64/25.08
+
           - name: rust
             tag: 23.08
             flathub: >
@@ -104,6 +112,18 @@ jobs:
               org.freedesktop.Sdk.Extension.rust-stable/x86_64/24.08
               org.freedesktop.Sdk.Extension.llvm18/aarch64/24.08
               org.freedesktop.Sdk.Extension.rust-stable/aarch64/24.08
+
+          - name: rust
+            tag: 25.08
+            flathub: >
+              org.freedesktop.Platform/x86_64/25.08
+              org.freedesktop.Sdk/x86_64/25.08
+              org.freedesktop.Platform/aarch64/25.08
+              org.freedesktop.Sdk/aarch64/25.08
+              org.freedesktop.Sdk.Extension.llvm20/x86_64/25.08
+              org.freedesktop.Sdk.Extension.rust-stable/x86_64/25.08
+              org.freedesktop.Sdk.Extension.llvm20/aarch64/25.08
+              org.freedesktop.Sdk.Extension.rust-stable/aarch64/25.08
 
           # GNOME
           #
