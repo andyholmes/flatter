@@ -66,14 +66,6 @@ jobs:
           # These are images for the freedesktop.org runtime, and those that
           # add a few packages to support additional languages and so on.
           - name: freedesktop
-            tag: 23.08
-            flathub: >
-              org.freedesktop.Platform/x86_64/23.08
-              org.freedesktop.Sdk/x86_64/23.08
-              org.freedesktop.Platform/aarch64/23.08
-              org.freedesktop.Sdk/aarch64/23.08
-
-          - name: freedesktop
             tag: 24.08
             flathub: >
               org.freedesktop.Platform/x86_64/24.08
@@ -88,18 +80,6 @@ jobs:
               org.freedesktop.Sdk/x86_64/25.08
               org.freedesktop.Platform/aarch64/25.08
               org.freedesktop.Sdk/aarch64/25.08
-
-          - name: rust
-            tag: 23.08
-            flathub: >
-              org.freedesktop.Platform/x86_64/23.08
-              org.freedesktop.Sdk/x86_64/23.08
-              org.freedesktop.Platform/aarch64/23.08
-              org.freedesktop.Sdk/aarch64/23.08
-              org.freedesktop.Sdk.Extension.llvm17/x86_64/23.08
-              org.freedesktop.Sdk.Extension.rust-stable/x86_64/23.08
-              org.freedesktop.Sdk.Extension.llvm17/aarch64/23.08
-              org.freedesktop.Sdk.Extension.rust-stable/aarch64/23.08
 
           - name: rust
             tag: 24.08
@@ -130,20 +110,20 @@ jobs:
           # These are images for the GNOME runtime, and those that add a few
           # things for e.g. Rust bindings.
           - name: gnome
-            tag: 47
-            flathub: >
-              org.gnome.Platform/x86_64/47
-              org.gnome.Sdk/x86_64/47
-              org.gnome.Platform/aarch64/47
-              org.gnome.Sdk/aarch64/47
-
-          - name: gnome
             tag: 48
             flathub: >
               org.gnome.Platform/x86_64/48
               org.gnome.Sdk/x86_64/48
               org.gnome.Platform/aarch64/48
               org.gnome.Sdk/aarch64/48
+
+          - name: gnome
+            tag: 49
+            flathub: >
+              org.gnome.Platform/x86_64/49
+              org.gnome.Sdk/x86_64/49
+              org.gnome.Platform/aarch64/49
+              org.gnome.Sdk/aarch64/49
 
           - name: gnome
             tag: master
@@ -154,38 +134,28 @@ jobs:
               org.gnome.Sdk/aarch64/master
 
           - name: gnome-rust
-            tag: 47
+            tag: 48
             flathub: >
-              org.gnome.Platform/x86_64/47
-              org.gnome.Sdk/x86_64/47
-              org.gnome.Platform/aarch64/47
-              org.gnome.Sdk/aarch64/47
+              org.gnome.Platform/x86_64/48
+              org.gnome.Sdk/x86_64/48
+              org.gnome.Platform/aarch64/48
+              org.gnome.Sdk/aarch64/48
               org.freedesktop.Sdk.Extension.llvm18/x86_64/24.08
               org.freedesktop.Sdk.Extension.rust-stable/x86_64/24.08
               org.freedesktop.Sdk.Extension.llvm18/aarch64/24.08
               org.freedesktop.Sdk.Extension.rust-stable/aarch64/24.08
 
           - name: gnome-rust
-            tag: 48
+            tag: 49
             flathub: >
-              org.gnome.Platform/x86_64/48
-              org.gnome.Sdk/x86_64/48
-              org.gnome.Platform/aarch64/48
-              org.gnome.Sdk/aarch64/48
-              org.freedesktop.Sdk.Extension.llvm18/x86_64/24.08
-              org.freedesktop.Sdk.Extension.rust-stable/x86_64/24.08
-              org.freedesktop.Sdk.Extension.llvm18/aarch64/24.08
-              org.freedesktop.Sdk.Extension.rust-stable/aarch64/24.08
-
-          - name: gnome-typescript
-            tag: 47
-            flathub: >
-              org.gnome.Platform/x86_64/47
-              org.gnome.Sdk/x86_64/47
-              org.gnome.Platform/aarch64/47
-              org.gnome.Sdk/aarch64/47
-              org.freedesktop.Sdk.Extension.node20/x86_64/24.08
-              org.freedesktop.Sdk.Extension.typescript/x86_64/24.08
+              org.gnome.Platform/x86_64/49
+              org.gnome.Sdk/x86_64/49
+              org.gnome.Platform/aarch64/49
+              org.gnome.Sdk/aarch64/49
+              org.freedesktop.Sdk.Extension.llvm18/x86_64/25.08
+              org.freedesktop.Sdk.Extension.rust-stable/x86_64/25.08
+              org.freedesktop.Sdk.Extension.llvm18/aarch64/25.08
+              org.freedesktop.Sdk.Extension.rust-stable/aarch64/25.08
 
           - name: gnome-typescript
             tag: 48
@@ -197,14 +167,15 @@ jobs:
               org.freedesktop.Sdk.Extension.node20/x86_64/24.08
               org.freedesktop.Sdk.Extension.typescript/x86_64/24.08
 
-          - name: gnome-vala
-            tag: 47
+          - name: gnome-typescript
+            tag: 49
             flathub: >
-              org.gnome.Platform/x86_64/47
-              org.gnome.Sdk/x86_64/47
-              org.gnome.Platform/aarch64/47
-              org.gnome.Sdk/aarch64/47
-              org.freedesktop.Sdk.Extension.vala/x86_64/24.08
+              org.gnome.Platform/x86_64/49
+              org.gnome.Sdk/x86_64/49
+              org.gnome.Platform/aarch64/49
+              org.gnome.Sdk/aarch64/49
+              org.freedesktop.Sdk.Extension.node20/x86_64/25.08
+              org.freedesktop.Sdk.Extension.typescript/x86_64/25.08
 
           - name: gnome-vala
             tag: 48
@@ -214,6 +185,15 @@ jobs:
               org.gnome.Platform/aarch64/48
               org.gnome.Sdk/aarch64/48
               org.freedesktop.Sdk.Extension.vala/x86_64/24.08
+
+          - name: gnome-vala
+            tag: 49
+            flathub: >
+              org.gnome.Platform/x86_64/49
+              org.gnome.Sdk/x86_64/49
+              org.gnome.Platform/aarch64/49
+              org.gnome.Sdk/aarch64/49
+              org.freedesktop.Sdk.Extension.vala/x86_64/25.08
 
           # Workbench
           #
