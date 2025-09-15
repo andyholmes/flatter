@@ -152,9 +152,9 @@ jobs:
               org.gnome.Sdk/x86_64/49
               org.gnome.Platform/aarch64/49
               org.gnome.Sdk/aarch64/49
-              org.freedesktop.Sdk.Extension.llvm18/x86_64/25.08
+              org.freedesktop.Sdk.Extension.llvm20/x86_64/25.08
               org.freedesktop.Sdk.Extension.rust-stable/x86_64/25.08
-              org.freedesktop.Sdk.Extension.llvm18/aarch64/25.08
+              org.freedesktop.Sdk.Extension.llvm20/aarch64/25.08
               org.freedesktop.Sdk.Extension.rust-stable/aarch64/25.08
 
           - name: gnome-typescript
