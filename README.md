@@ -251,12 +251,12 @@ built from the base [`Dockerfile`](Dockerfile):
 
 | Image Name               | Version Tags                | Architectures       |
 |--------------------------|-----------------------------|---------------------|
-| `freedesktop`            | `23.08`, `24.08`            | `x86_64`, `aarch64` |
-| `rust`                   | `23.08`, `24.08`            | `x86_64`, `aarch64` |
-| `gnome`                  | `47`, `48`, `master`        | `x86_64`, `aarch64` |
-| `gnome-rust`             | `47`, `48`                  | `x86_64`, `aarch64` |
-| `gnome-typescript`       | `47`, `48`                  | `x86_64`, `aarch64` |
-| `gnome-vala`             | `47`, `48`                  | `x86_64`, `aarch64` |
+| `freedesktop`            | `24.08`, `25.08`            | `x86_64`, `aarch64` |
+| `rust`                   | `24.08`, `25.08`            | `x86_64`, `aarch64` |
+| `gnome`                  | `48`, `49`, `master`        | `x86_64`, `aarch64` |
+| `gnome-rust`             | `48`, `49`                  | `x86_64`, `aarch64` |
+| `gnome-typescript`       | `48`, `49`                  | `x86_64`, `aarch64` |
+| `gnome-vala`             | `48`, `49`                  | `x86_64`, `aarch64` |
 | `kde`                    | `5.15-23.08`, `6.6`, `6.7`  | `x86_64`, `aarch64` |
 | `workbench`<sup>1</sup>  | `master`                    | `x86_64`, `aarch64` |
 
