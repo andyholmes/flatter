@@ -64,7 +64,7 @@ jobs:
 
       # See "GPG Signing" below
       - name: Setup GPG
-        if: ${{ github.event_name != 'pull_request' }}
+        if: ${{ github.triggering_actor == github.repository_owner }}
         id: gpg
         uses: crazy-max/ghaction-import-gpg@v5
         with:
