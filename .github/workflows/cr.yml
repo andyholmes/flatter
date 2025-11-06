@@ -195,6 +195,34 @@ jobs:
               org.gnome.Sdk/aarch64/49
               org.freedesktop.Sdk.Extension.vala/x86_64/25.08
 
+          # elementary
+          #
+          # These are images for the elementary OS runtimes. The maintainer
+          # doesn't use these, but feel free to open a PR if out-of-date.
+          - name: elementary
+            tag: 7.3
+            flathub: >
+              io.elementary.Platform/x86_64/7.3
+              io.elementary.Sdk/x86_64/7.3
+              io.elementary.Platform/aarch64/7.3
+              io.elementary.Sdk/aarch64/7.3
+
+          - name: elementary
+            tag: 8.2
+            flathub: >
+              io.elementary.Platform/x86_64/8.2
+              io.elementary.Sdk/x86_64/8.2
+              io.elementary.Platform/aarch64/8.2
+              io.elementary.Sdk/aarch64/8.2
+
+          - name: elementary
+            tag: daily
+            flathub: >
+              io.elementary.Platform/x86_64/daily
+              io.elementary.Sdk/x86_64/daily
+              io.elementary.Platform/aarch64/daily
+              io.elementary.Sdk/aarch64/daily
+
           # Workbench
           #
           # This is a special image for Workbench, that includes quite a few
@@ -306,6 +334,14 @@ jobs:
           RUN --security=insecure flatpak install -y --noninteractive \
                                           flathub \
                                           ${{ matrix.runtime.flathub }}
+          EOF
+          fi
+
+          if [ -n "${{ matrix.runtime.elementary }}" ]; then
+          cat >> ${{ matrix.runtime.name }}.Dockerfile << EOF
+          RUN --security=insecure flatpak install -y --noninteractive \
+                                          elementary \
+                                          ${{ matrix.runtime.elementary }}
           EOF
           fi
 
