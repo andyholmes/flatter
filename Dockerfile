@@ -65,5 +65,6 @@ RUN git clone https://github.com/flathub/flatpak-external-data-checker.git \
 #
 RUN flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo && \
     flatpak remote-add --if-not-exists flathub-beta https://flathub.org/beta-repo/flathub-beta.flatpakrepo && \
-    flatpak remote-add --if-not-exists gnome-nightly https://nightly.gnome.org/gnome-nightly.flatpakrepo
+    flatpak remote-add --if-not-exists gnome-nightly https://nightly.gnome.org/gnome-nightly.flatpakrepo && \
+    flatpak remote-add --if-not-exists elementary https://flatpak.elementary.io/repo.flatpakrepo
 
