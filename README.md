@@ -257,7 +257,8 @@ built from the base [`Dockerfile`](Dockerfile):
 | `gnome-rust`             | `48`, `49`                  | `x86_64`, `aarch64` |
 | `gnome-typescript`       | `48`, `49`                  | `x86_64`, `aarch64` |
 | `gnome-vala`             | `48`, `49`                  | `x86_64`, `aarch64` |
-| `kde`                    | `5.15-23.08`, `6.6`, `6.7`  | `x86_64`, `aarch64` |
+| `qt`                     | `5.15-24.08`, `5.15-25.08`  | `x86_64`, `aarch64` |
+| `kde`                    | `6.9`, `6.10`               | `x86_64`, `aarch64` |
 | `workbench`<sup>1</sup>  | `master`                    | `x86_64`, `aarch64` |
 
 <sup>**1** This is custom container for Workbench, based on GNOME Nightly with
