@@ -333,6 +333,30 @@ async function checkApplication(_directory, manifest) {
     return true;
 }
 
+async function mesonTestLogger(stdout = '', _stderr = '') {
+    let stage = null;
+    const md_lines = stdout.split('\n').reduce((accumulator, line) => {
+        if (stage !== 'summary') {
+            if (line.startsWith('Summary of Failures:')) {
+                accumulator.push('```', line);
+                stage = 'summary';
+            }
+        } else {
+            if (line.startsWith('Full log written to')) {
+                accumulator.splice(accumulator.length - 1, 1, '```');
+                stage = null;
+            } else {
+                accumulator.push(line);
+            }
+        }
+
+      return accumulator;
+    }, []);
+
+    core.summary.addRaw(md_lines.join('\n'));
+    await core.summary.write();
+}
+
 /**
  * Build a Flatpak application for testing.
  *
@@ -410,8 +434,10 @@ async function testApplication(directory, manifest) {
     try {
         const testCommand = ['xvfb-run', '--', 'flatpak-builder',
             ...builderArgs, '_build', manifest].join(' ');
-        const exitCode = await exec.exec('bash', ['-c', testCommand],
-            {ignoreReturnCode: true});
+        const {exitCode, stdout, stderr} = await exec.getExecOutput('bash',
+            ['-c', testCommand], {ignoreReturnCode: true});
+
+        await mesonTestLogger(stdout, stderr);
 
         if (exitCode === 42 && builderArgs.includes('--skip-if-unchanged'))
             core.info('No changes and "--skip-if-unchanged" in arguments');
