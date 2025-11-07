@@ -79,7 +79,7 @@ jobs:
 
       - name: Analyze
         run: npx eslint .
-          --config .eslintrc.json
+          --config .eslint.config.js
           --ext .js,.jsx,.ts,.tsx
           --format @microsoft/eslint-formatter-sarif
           --output-file eslint-results.sarif
