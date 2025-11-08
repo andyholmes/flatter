@@ -15,6 +15,7 @@
         "js-yaml": "^4.0.0"
     },
     "devDependencies": {
+        "@microsoft/eslint-formatter-sarif": "^3.1.0",
         "@vercel/ncc": "^0.38.0",
         "eslint": "^9.5.0"
     }
