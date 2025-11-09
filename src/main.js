@@ -38,15 +38,15 @@ async function run() {
             core.info(`Testing "${manifest}"`);
 
             try {
-                await flatter.checkApplication(repository, manifest);
-            } catch (e) {
-                core.warning(`Checking "${manifest}": ${e.message}`);
-            }
-
-            try {
                 await flatter.testApplication(repository, manifest);
             } catch (e) {
                 core.setFailed(`Testing "${manifest}": ${e.message}`);
+            }
+
+            try {
+                await flatter.checkDependencies(repository, manifest);
+            } catch (e) {
+                core.warning(`Checking "${manifest}": ${e.message}`);
             }
 
             if (process.exitCode === core.ExitCode.Failure)

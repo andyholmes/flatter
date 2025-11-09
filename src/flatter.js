@@ -17,7 +17,7 @@ import { homedir } from 'os';
 export {
     buildApplication,
     bundleApplication,
-    checkApplication,
+    checkDependencies,
     testApplication,
     generateDescription,
     restoreCache,
@@ -290,14 +290,14 @@ async function bundleApplication(directory, manifest) {
 /**
  * Check a Flatpak manifest.
  *
- * Currently this runs `flatpak-external-data-checker` on the manifest and
- * appends markdown to the GitHub job summary.
+ * This runs `flatpak-external-data-checker` on the manifest and appends
+ * markdown to the GitHub job summary.
  *
  * @param {PathLike} directory - A path to a Flatpak repository
  * @param {PathLike} manifest - A path to a Flatpak manifest
  * @returns {boolean} - %true if successful, or %false if otherwise
  */
-async function checkApplication(_directory, manifest) {
+async function checkDependencies(_directory, manifest) {
     const {stdout} = await exec.getExecOutput('flatpak-external-data-checker',
         [manifest]);
 
