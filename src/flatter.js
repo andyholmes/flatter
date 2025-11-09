@@ -299,7 +299,7 @@ async function bundleApplication(directory, manifest) {
  */
 async function checkDependencies(_directory, manifest) {
     const {stdout} = await exec.getExecOutput('flatpak-external-data-checker',
-        [manifest]);
+        ['--edit-only', manifest]);
 
     if (stdout.includes('OUTDATED')) {
         const lines = stdout?.split('\n') || [];
@@ -313,8 +313,6 @@ async function checkDependencies(_directory, manifest) {
                 accumulator.push('');
             } else if ((match = line.match(/^OUTDATED: (.*)$/m)) != null) {
                 const module = match[1].split('.')[0];
-                accumulator.push(`#### \`${match[1]}\``);
-                accumulator.push('');
                 accumulator.push(`|  \`${module}\`  |                 |`);
                 accumulator.push('|-----------------|-----------------|');
             } else if ((match = line.match(/^ {2}([^:]*): +(.*)$/m)) != null) {
@@ -322,7 +320,7 @@ async function checkDependencies(_directory, manifest) {
             }
 
           return accumulator;
-        }, [`### \`${path.basename(manifest)}\`\n\n`]);
+        }, ['### Dependency Updates\n\n']);
 
         core.summary.addRaw(md_lines.join('\n'));
         await core.summary.write();
