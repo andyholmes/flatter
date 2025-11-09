@@ -201,7 +201,7 @@ jobs:
           # doesn't use these, but feel free to open a PR if out-of-date.
           - name: elementary
             tag: 7.3
-            flathub: >
+            elementary: >
               io.elementary.Platform/x86_64/7.3
               io.elementary.Sdk/x86_64/7.3
               io.elementary.Platform/aarch64/7.3
@@ -209,7 +209,7 @@ jobs:
 
           - name: elementary
             tag: 8.2
-            flathub: >
+            elementary: >
               io.elementary.Platform/x86_64/8.2
               io.elementary.Sdk/x86_64/8.2
               io.elementary.Platform/aarch64/8.2
@@ -217,7 +217,7 @@ jobs:
 
           - name: elementary
             tag: daily
-            flathub: >
+            elementary: >
               io.elementary.Platform/x86_64/daily
               io.elementary.Sdk/x86_64/daily
               io.elementary.Platform/aarch64/daily
