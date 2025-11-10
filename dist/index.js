@@ -142678,7 +142678,7 @@ async function checkDependencies(_directory, manifest) {
           return accumulator;
         }, ['### Dependency Updates\n\n']);
 
-        core.summary.addRaw(md_lines.join('\n'));
+        core.summary.addRaw([...md_lines, '\n'].join('\n'));
         await core.summary.write();
 
         return false;
@@ -142707,7 +142707,7 @@ async function mesonTestLogger(stdout = '', _stderr = '') {
       return accumulator;
     }, []);
 
-    core.summary.addRaw(md_lines.join('\n'));
+    core.summary.addRaw([...md_lines, '\n'].join('\n'));
     await core.summary.write();
 }
 
