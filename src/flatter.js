@@ -19,7 +19,6 @@ export {
     bundleApplication,
     checkDependencies,
     testApplication,
-    generateDescription,
     restoreCache,
     saveCache,
 };
@@ -158,12 +157,6 @@ async function writeManifest(manifestPath, manifest) {
     await fs.promises.writeFile(manifestPath, data);
 }
 
-/**
- * Generate a .flatpakrepo file and add it to the repository directory.
- *
- * @param {PathLike} directory - A path to a Flatpak repository
- * @returns {Promise<>} A promise for the operation
- */
 async function generateDescription(directory) {
     /* Collect the .flatpakrepo fields */
     const {repository} = github.context.payload;
@@ -211,7 +204,6 @@ async function generateDescription(directory) {
     await fs.promises.writeFile(filePath, fileData.join('\n'));
 }
 
-
 /**
  * Build a Flatpak application for the repository.
  *
@@ -246,8 +238,9 @@ async function buildApplication(directory, manifest) {
     if (exitCode === 42 && builderArgs.includes('--skip-if-unchanged'))
         core.info('No changes and "--skip-if-unchanged" in arguments');
     else if (exitCode !== 0)
-        throw new Error(`tests failed with exit code ${exitCode}`);
+        throw new Error(`build failed with exit code ${exitCode}`);
 
+    await generateDescription(directory);
     await saveBuildState(buildState);
 }
 
