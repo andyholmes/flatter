@@ -78,9 +78,6 @@ async function run() {
         core.startGroup('Uploading GitHub Pages artifact...');
 
         try {
-            // Generate a .flatpakrepo file
-            await flatter.generateDescription(repository);
-
             // Copy extra files to the repository directory
             await includeFiles(repository);
 
