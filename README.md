@@ -290,8 +290,8 @@ jobs:
 
 > [!TIP]
 > If the workflow is intended to be run on pull requests from contributors, be
-> sure to add `if: ${{ github.event_name != 'pull_request' }}` to the GPG
-> signing step to avoid the job failing.
+> sure to add `if: ${{ github.triggering_actor == github.repository_owner }}`
+> to the GPG signing step to avoid the job failing.
 
 Flatter supports signing the repository and bundles with GPG. First generate a
 GPG key for your repository:
@@ -334,7 +334,7 @@ jobs:
 
       - name: Setup GPG
         # Skip GPG signing for pull requests
-        if: ${{ github.event_name != 'pull_request' }}
+        if: ${{ github.triggering_actor == github.repository_owner }}
         id: gpg
         uses: crazy-max/ghaction-import-gpg@v5
         with:
