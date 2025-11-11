@@ -80,7 +80,7 @@ jobs:
         uses: andyholmes/flatter@main
         with:
           files: |
-            build-aux/flatpak/com.example.App.json
+            build-aux/flatpak/ca.andyholmes.Flatter.json
           arch: ${{ matrix.arch }}
           gpg-sign: ${{ steps.gpg.outputs.fingerprint }}
           upload-bundles: true
@@ -345,7 +345,7 @@ jobs:
         uses: andyholmes/flatter@main
         with:
           files: |
-            build-aux/flatpak/com.example.App.json
+            build-aux/flatpak/ca.andyholmes.Flatter.json
           gpg-sign: ${{ steps.gpg.outputs.fingerprint }}
 ```
 
@@ -360,7 +360,7 @@ assets, so deployment is quite flexible.
 
 For each manifest built, Flatter can bundle and upload the application as a job
 artifact. The artifacts are consistently named in the form
-`<application-id>-<architecture>` (e.g. `com.example.App-x86_64`).
+`<application-id>-<architecture>` (e.g. `ca.andyholmes.Flatter-x86_64`).
 
 Set the `upload-bundles` input to `true` and together with
 [nightly.link](https://nightly.link), you can get static links to the most
@@ -419,7 +419,7 @@ jobs:
         uses: andyholmes/flatter@main
         with:
           files: |
-            build-aux/flatpak/com.example.App.json
+            build-aux/flatpak/ca.andyholmes.Flatter.json
           upload-pages-artifact: true
           upload-pages-includes: |
             CNAME
@@ -479,7 +479,7 @@ jobs:
         uses: andyholmes/flatter@main
         with:
           files: |
-            build-aux/flatpak/com.example.App.json
+            build-aux/flatpak/ca.andyholmes.Flatter.json
 
       - name: Deploy Repository
         uses: JamesIves/github-pages-deploy-action@releases/v4
@@ -534,7 +534,7 @@ jobs:
         uses: andyholmes/flatter@main
         with:
           files: |
-            build-aux/flatpak/com.example.App.json
+            build-aux/flatpak/ca.andyholmes.Flatter.json
           arch: ${{ matrix.arch }}
 ```
 
