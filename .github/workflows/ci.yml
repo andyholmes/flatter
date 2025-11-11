@@ -98,6 +98,12 @@ jobs:
           cache-key: ''
           run-tests: true
 
+      - name: Test Report
+        uses: actions/upload-artifact@v5
+        with:
+          name: Test Logs (${{ matrix.arch }})
+          path: .flatpak-builder/build/flatter/_flatpak_build/meson-logs
+
       - name: Assert Test Failure
         if: ${{ steps.test-failure.outcome != 'failure' }}
         run: |
@@ -148,4 +154,14 @@ jobs:
               exit 1
             fi
           done
+
+          if [ ! -f "artifacts/Test Logs (x86_64)/testlog.txt" ]; then
+            echo "Artifact Test Logs (x86_64) not found." >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+
+          if [ ! -f "artifacts/Test Logs (aarch64)/testlog.txt" ]; then
+            echo "Artifact Test Logs (aarch64) not found." >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
 
