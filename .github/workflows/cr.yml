@@ -23,7 +23,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Login
         if: ${{ github.event_name != 'pull_request' }}
@@ -291,7 +291,7 @@ jobs:
           sudo docker builder prune -a
 
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Login
         if: ${{ github.event_name != 'pull_request' }}
