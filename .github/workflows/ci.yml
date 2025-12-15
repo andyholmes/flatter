@@ -99,7 +99,7 @@ jobs:
           run-tests: true
 
       - name: Test Report
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: Test Logs (${{ matrix.arch }})
           path: .flatpak-builder/build/flatter/_flatpak_build/meson-logs
