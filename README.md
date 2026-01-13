@@ -253,6 +253,7 @@ built from the base [`Dockerfile`](Dockerfile):
 |--------------------------|-----------------------------|---------------------|
 | `freedesktop`            | `24.08`, `25.08`            | `x86_64`, `aarch64` |
 | `rust`                   | `24.08`, `25.08`            | `x86_64`, `aarch64` |
+| `rust-nightly`           | `24.08`, `25.08`            | `x86_64`            |
 | `gnome`                  | `48`, `49`, `master`        | `x86_64`, `aarch64` |
 | `gnome-rust`             | `48`, `49`                  | `x86_64`, `aarch64` |
 | `gnome-typescript`       | `48`, `49`                  | `x86_64`, `aarch64` |
