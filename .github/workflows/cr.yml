@@ -110,24 +110,16 @@ jobs:
             flathub: >
               org.freedesktop.Platform/x86_64/24.08
               org.freedesktop.Sdk/x86_64/24.08
-          #     org.freedesktop.Platform/aarch64/24.08
-          #     org.freedesktop.Sdk/aarch64/24.08
               org.freedesktop.Sdk.Extension.llvm18/x86_64/24.08
               org.freedesktop.Sdk.Extension.rust-nightly/x86_64/24.08
-          #     org.freedesktop.Sdk.Extension.llvm18/aarch64/24.08
-          #     org.freedesktop.Sdk.Extension.rust-nightly/aarch64/24.08
 
           - name: rust-nightly
             tag: 25.08
             flathub: >
               org.freedesktop.Platform/x86_64/25.08
               org.freedesktop.Sdk/x86_64/25.08
-          #     org.freedesktop.Platform/aarch64/25.08
-          #     org.freedesktop.Sdk/aarch64/25.08
               org.freedesktop.Sdk.Extension.llvm20/x86_64/25.08
               org.freedesktop.Sdk.Extension.rust-nightly/x86_64/25.08
-          #     org.freedesktop.Sdk.Extension.llvm20/aarch64/25.08
-          #     org.freedesktop.Sdk.Extension.rust-nightly/aarch64/25.08
 
           # GNOME
           #
