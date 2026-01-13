@@ -296,7 +296,7 @@ jobs:
               org.kde.Sdk/aarch64/6.9
 
           - name: kde
-            tag: 6.10
+            tag: '6.10'
             flathub: >
               org.kde.Platform/x86_64/6.10
               org.kde.Sdk/x86_64/6.10
