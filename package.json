@@ -7,7 +7,7 @@
         "dist": "ncc build -o dist src/main.js"
     },
     "dependencies": {
-        "@actions/artifact": "^5.0.1",
+        "@actions/artifact": "^6.1.0",
         "@actions/cache": "^5.0.1",
         "@actions/core": "^2.0.1",
         "@actions/exec": "^3.0.0",
