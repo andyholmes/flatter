@@ -126,14 +126,6 @@ jobs:
           # These are images for the GNOME runtime, and those that add a few
           # things for e.g. Rust bindings.
           - name: gnome
-            tag: 48
-            flathub: >
-              org.gnome.Platform/x86_64/48
-              org.gnome.Sdk/x86_64/48
-              org.gnome.Platform/aarch64/48
-              org.gnome.Sdk/aarch64/48
-
-          - name: gnome
             tag: 49
             flathub: >
               org.gnome.Platform/x86_64/49
@@ -142,24 +134,20 @@ jobs:
               org.gnome.Sdk/aarch64/49
 
           - name: gnome
+            tag: 50
+            flathub: >
+              org.gnome.Platform/x86_64/50
+              org.gnome.Sdk/x86_64/50
+              org.gnome.Platform/aarch64/50
+              org.gnome.Sdk/aarch64/50
+
+          - name: gnome
             tag: master
             gnome_nightly: >
               org.gnome.Platform/x86_64/master
               org.gnome.Sdk/x86_64/master
               org.gnome.Platform/aarch64/master
               org.gnome.Sdk/aarch64/master
-
-          - name: gnome-rust
-            tag: 48
-            flathub: >
-              org.gnome.Platform/x86_64/48
-              org.gnome.Sdk/x86_64/48
-              org.gnome.Platform/aarch64/48
-              org.gnome.Sdk/aarch64/48
-              org.freedesktop.Sdk.Extension.llvm18/x86_64/24.08
-              org.freedesktop.Sdk.Extension.rust-stable/x86_64/24.08
-              org.freedesktop.Sdk.Extension.llvm18/aarch64/24.08
-              org.freedesktop.Sdk.Extension.rust-stable/aarch64/24.08
 
           - name: gnome-rust
             tag: 49
@@ -173,15 +161,17 @@ jobs:
               org.freedesktop.Sdk.Extension.llvm20/aarch64/25.08
               org.freedesktop.Sdk.Extension.rust-stable/aarch64/25.08
 
-          - name: gnome-typescript
-            tag: 48
+          - name: gnome-rust
+            tag: 50
             flathub: >
-              org.gnome.Platform/x86_64/48
-              org.gnome.Sdk/x86_64/48
-              org.gnome.Platform/aarch64/48
-              org.gnome.Sdk/aarch64/48
-              org.freedesktop.Sdk.Extension.node20/x86_64/24.08
-              org.freedesktop.Sdk.Extension.typescript/x86_64/24.08
+              org.gnome.Platform/x86_64/50
+              org.gnome.Sdk/x86_64/50
+              org.gnome.Platform/aarch64/50
+              org.gnome.Sdk/aarch64/50
+              org.freedesktop.Sdk.Extension.llvm20/x86_64/25.08
+              org.freedesktop.Sdk.Extension.rust-stable/x86_64/25.08
+              org.freedesktop.Sdk.Extension.llvm20/aarch64/25.08
+              org.freedesktop.Sdk.Extension.rust-stable/aarch64/25.08
 
           - name: gnome-typescript
             tag: 49
@@ -193,14 +183,15 @@ jobs:
               org.freedesktop.Sdk.Extension.node20/x86_64/25.08
               org.freedesktop.Sdk.Extension.typescript/x86_64/25.08
 
-          - name: gnome-vala
-            tag: 48
+          - name: gnome-typescript
+            tag: 50
             flathub: >
-              org.gnome.Platform/x86_64/48
-              org.gnome.Sdk/x86_64/48
-              org.gnome.Platform/aarch64/48
-              org.gnome.Sdk/aarch64/48
-              org.freedesktop.Sdk.Extension.vala/x86_64/24.08
+              org.gnome.Platform/x86_64/50
+              org.gnome.Sdk/x86_64/50
+              org.gnome.Platform/aarch64/50
+              org.gnome.Sdk/aarch64/50
+              org.freedesktop.Sdk.Extension.node20/x86_64/25.08
+              org.freedesktop.Sdk.Extension.typescript/x86_64/25.08
 
           - name: gnome-vala
             tag: 49
@@ -209,6 +200,15 @@ jobs:
               org.gnome.Sdk/x86_64/49
               org.gnome.Platform/aarch64/49
               org.gnome.Sdk/aarch64/49
+              org.freedesktop.Sdk.Extension.vala/x86_64/25.08
+
+          - name: gnome-vala
+            tag: 50
+            flathub: >
+              org.gnome.Platform/x86_64/50
+              org.gnome.Sdk/x86_64/50
+              org.gnome.Platform/aarch64/50
+              org.gnome.Sdk/aarch64/50
               org.freedesktop.Sdk.Extension.vala/x86_64/25.08
 
           # elementary
