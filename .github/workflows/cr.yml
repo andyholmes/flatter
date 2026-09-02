@@ -81,6 +81,14 @@ jobs:
               org.freedesktop.Platform/aarch64/25.08
               org.freedesktop.Sdk/aarch64/25.08
 
+          - name: freedesktop
+            tag: 26.08
+            flathub: >
+              org.freedesktop.Platform/x86_64/26.08
+              org.freedesktop.Sdk/x86_64/26.08
+              org.freedesktop.Platform/aarch64/26.08
+              org.freedesktop.Sdk/aarch64/26.08
+
           - name: rust
             tag: 24.08
             flathub: >
